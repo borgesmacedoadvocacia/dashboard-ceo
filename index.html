@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<script>
+/* Central BM — o acesso a este dashboard agora é pela central única.
+   Link antigo/acesso direto é remanejado para a central; dentro dela,
+   com a sessão ativa, a página abre normalmente. */
+(function () {
+  var PORTAL = 'https://borgesmacedoadvocacia.github.io/';
+  if (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+  function ir() { try { window.top.location.replace(PORTAL); } catch (e) { location.replace(PORTAL); } }
+  if (window.self === window.top) { ir(); return; }
+  var ok = false;
+  try { ok = sessionStorage.getItem('bm_portal_auth') === '1'; } catch (e) {}
+  if (!ok) { ir(); return; }
+  document.documentElement.setAttribute('data-portal', '1');
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ambiente do CEO | Borges Macedo</title>
+<link rel="icon" type="image/png" href="favicon.png" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b26;
+    --bg3: #1e2536;
+    --bg4: #232c42;
+    --azul: #2563eb;
+    --azul-claro: #3b82f6;
+    --verde: #22c55e;
+    --verde-fraco: rgba(34,197,94,0.13);
+    --vermelho: #ef4444;
+    --vermelho-fraco: rgba(239,68,68,0.13);
+    --amarelo: #f59e0b;
+    --amarelo-fraco: rgba(245,158,11,0.13);
+    --roxo: #a855f7;
+    --ciano: #06b6d4;
+    --texto: #e2e8f0;
+    --texto-muted: #64748b;
+    --borda: #1e2d4a;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  html { font-size: 15px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--texto);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding-bottom: 3rem;
+    overflow-x: hidden;
+  }
+
+  /* ===== CABEÇALHO ===== */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    padding: 1rem 1.75rem;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--borda);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-logo { display: flex; align-items: center; gap: 0.75rem; }
+  .logo-img { height: 38px; width: auto; object-fit: contain; }
+  .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .logo-name { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .logo-sub { font-size: 0.63rem; color: var(--texto-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
+  .header-updated { font-size: 0.72rem; color: var(--texto-muted); }
+  .btn-atualizar {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.4rem 0.85rem; background: transparent;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    color: var(--texto); font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: background .15s, border-color .15s;
+  }
+  .btn-atualizar:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.3); }
+
+  /* ===== LAYOUT ===== */
+  .container { max-width: 1500px; margin: 0 auto; padding: 1.5rem 1.75rem; }
+  .secao { margin-bottom: 2rem; }
+  .secao-titulo {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.95rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 0.35rem;
+  }
+  .secao-titulo::before { content: ''; width: 3px; height: 17px; background: var(--azul-claro); border-radius: 2px; }
+  .secao-sub { font-size: 0.78rem; color: var(--texto-muted); margin-bottom: 1rem; margin-left: 0.9rem; }
+
+  .card {
+    background: var(--bg2); border: 1px solid var(--borda);
+    border-radius: var(--radius); padding: 1.15rem; box-shadow: var(--shadow);
+  }
+
+  /* ===== KPIs ===== */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.9rem; }
+  .kpi { position: relative; overflow: hidden; }
+  .kpi::after { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--azul-claro); }
+  .kpi.verde::after { background: var(--verde); }
+  .kpi.vermelho::after { background: var(--vermelho); }
+  .kpi.amarelo::after { background: var(--amarelo); }
+  .kpi.roxo::after { background: var(--roxo); }
+  .kpi-topo { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.55rem; }
+  .kpi-nome { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--texto-muted); font-weight: 700; }
+  .kpi-pct {
+    font-size: 0.72rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 6px; white-space: nowrap;
+  }
+  .kpi-pct.verde { background: var(--verde-fraco); color: var(--verde); }
+  .kpi-pct.vermelho { background: var(--vermelho-fraco); color: var(--vermelho); }
+  .kpi-pct.amarelo { background: var(--amarelo-fraco); color: var(--amarelo); }
+  .kpi-pct.neutro { background: var(--bg3); color: var(--texto-muted); }
+  .kpi-valor { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+  .kpi-rodape { margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px solid var(--borda); font-size: 0.75rem; color: var(--texto-muted); display:flex; flex-direction:column; gap:.2rem; }
+  .kpi-rodape span b { color: var(--texto); font-weight: 600; }
+
+  /* ===== BARRA DE PROGRESSO ===== */
+  .barra-fundo { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: .5rem; }
+  .barra-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+
+  /* ===== TABELAS ===== */
+  .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; min-width: 640px; }
+  thead th {
+    text-align: right; padding: 0.6rem 0.7rem; font-size: 0.67rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--texto-muted); font-weight: 700;
+    border-bottom: 1px solid var(--borda); white-space: nowrap; background: var(--bg2);
+    position: sticky; top: 0;
+  }
+  thead th:first-child { text-align: left; }
+  tbody td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid rgba(30,45,74,0.5); white-space: nowrap; }
+  tbody td:first-child { text-align: left; white-space: normal; }
+  tbody tr.destaque { background: rgba(255,255,255,0.04); }
+  tbody tr.destaque td { font-weight: 800; border-top: 1px solid var(--borda); }
+  .tag-pct { font-weight: 800; padding: 0.1rem 0.5rem; border-radius: 5px; font-size: 0.76rem; display:inline-block; }
+  .tag-pct.verde { background: var(--verde-fraco); color: var(--verde); }
+  .tag-pct.vermelho { background: var(--vermelho-fraco); color: var(--vermelho); }
+  .tag-pct.amarelo { background: var(--amarelo-fraco); color: var(--amarelo); }
+  .tag-pct.neutro { background: var(--bg3); color: var(--texto-muted); }
+  .val-neg { color: var(--vermelho); font-weight: 600; }
+  .val-pos { color: var(--verde); font-weight: 600; }
+
+  /* ===== FILTROS (CHIPS) ===== */
+  .filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.9rem; }
+  .filtros .sep { width: 1px; align-self: stretch; background: var(--borda); margin: 0 0.35rem; }
+  .chip {
+    background: var(--bg3); border: 1px solid var(--borda); border-radius: 999px;
+    color: var(--texto-muted); font-size: 0.74rem; font-weight: 600; font-family: inherit;
+    padding: 0.3rem 0.75rem; cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .chip:hover { color: var(--texto); border-color: rgba(255,255,255,0.25); }
+  .chip.ativo { background: var(--azul); border-color: var(--azul); color: #fff; }
+  .tag-aba {
+    display: inline-block; padding: 0.12rem 0.5rem; border-radius: 5px;
+    font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+  }
+
+  /* ===== GRÁFICOS ===== */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(370px, 1fr)); gap: 1rem; }
+  .grafico-box { position: relative; width: 100%; }
+  .grafico-box.alto { height: 360px; }
+  .grafico-box.medio { height: 300px; }
+
+  /* ===== RESUMO POR ABA ===== */
+  .resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.9rem; margin-bottom: 1rem; }
+  .resumo-item { background: var(--bg3); border: 1px solid var(--borda); border-radius: 10px; padding: 0.9rem; }
+  .resumo-nome { font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-muted); font-weight: 700; margin-bottom: 0.35rem; }
+  .resumo-valor { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+  .resumo-nota { font-size: 0.71rem; color: var(--texto-muted); margin-top: 0.25rem; }
+
+  /* ===== OBSERVAÇÕES ===== */
+  .obs-lista { display: flex; flex-direction: column; gap: 0.6rem; }
+  .obs {
+    display: flex; gap: 0.75rem; padding: 0.8rem 0.95rem;
+    background: var(--bg3); border-radius: 10px;
+    border-left: 3px solid var(--texto-muted);
+  }
+  .obs.critico { border-left-color: var(--vermelho); background: rgba(239,68,68,0.07); }
+  .obs.atencao { border-left-color: var(--amarelo); background: rgba(245,158,11,0.06); }
+  .obs.bom { border-left-color: var(--verde); background: rgba(34,197,94,0.06); }
+  .obs.info { border-left-color: var(--azul-claro); }
+  .obs-icone { font-size: 1rem; line-height: 1.35; flex-shrink: 0; }
+  .obs-corpo { flex: 1; min-width: 0; }
+  .obs-titulo { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.15rem; }
+  .obs-texto { font-size: 0.8rem; color: var(--texto-muted); line-height: 1.5; }
+  .obs-texto b { color: var(--texto); font-weight: 600; }
+  .obs-vazio { padding: 1.5rem; text-align: center; color: var(--texto-muted); font-size: 0.85rem; }
+
+  /* ===== ESTADOS ===== */
+  .estado { padding: 3rem 1.5rem; text-align: center; color: var(--texto-muted); }
+  .spinner {
+    width: 34px; height: 34px; margin: 0 auto 1rem;
+    border: 3px solid var(--bg3); border-top-color: var(--azul-claro);
+    border-radius: 50%; animation: girar .8s linear infinite;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .erro-box {
+    background: rgba(239,68,68,0.1); border: 1px solid var(--vermelho);
+    border-radius: var(--radius); padding: 1rem; margin: 1rem 1.75rem;
+    color: #fca5a5; font-size: 0.85rem; line-height: 1.5;
+  }
+  .oculto { display: none !important; }
+
+  .rodape { text-align: center; font-size: 0.72rem; color: var(--texto-muted); padding: 1.5rem; line-height: 1.7; }
+  .rodape a { color: var(--azul-claro); text-decoration: none; }
+
+  /* ===== TELA DE LOGIN ===== */
+  .login-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: radial-gradient(circle at 50% 0%, #1a2338 0%, var(--bg) 62%);
+    display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+  }
+  .login-caixa {
+    width: 100%; max-width: 372px;
+    background: var(--bg2); border: 1px solid var(--borda);
+    border-radius: 16px; padding: 2rem 1.75rem;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+  }
+  .login-logo { display: block; height: 46px; margin: 0 auto 1.15rem; object-fit: contain; }
+  .login-titulo { text-align: center; font-size: 1.02rem; font-weight: 700; letter-spacing: 0.02em; }
+  .login-sub {
+    text-align: center; font-size: 0.72rem; color: var(--texto-muted);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.25rem; margin-bottom: 1.6rem;
+  }
+  .campo-grupo { margin-bottom: 0.9rem; }
+  .campo-rotulo {
+    display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--texto-muted); font-weight: 700; margin-bottom: 0.35rem;
+  }
+  .campo-texto {
+    width: 100%; background: var(--bg3); border: 1px solid var(--borda);
+    color: var(--texto); border-radius: 9px; padding: 0.68rem 0.85rem;
+    font-size: 0.92rem; font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  .campo-texto:focus { border-color: var(--azul-claro); }
+  .campo-texto::placeholder { color: #47536b; }
+  .btn-entrar {
+    width: 100%; margin-top: 0.5rem; padding: 0.72rem;
+    background: var(--azul); border: none; border-radius: 9px;
+    color: #fff; font-size: 0.92rem; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: background .15s;
+  }
+  .btn-entrar:hover:not(:disabled) { background: var(--azul-claro); }
+  .btn-entrar:disabled { opacity: 0.6; cursor: default; }
+  .login-erro {
+    margin-top: 0.9rem; padding: 0.6rem 0.75rem; border-radius: 8px;
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.45);
+    color: #fca5a5; font-size: 0.79rem; line-height: 1.45; text-align: center;
+  }
+  .login-rodape {
+    margin-top: 1.35rem; padding-top: 1rem; border-top: 1px solid var(--borda);
+    font-size: 0.7rem; color: var(--texto-muted); text-align: center; line-height: 1.55;
+  }
+  .btn-sair {
+    background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    color: var(--texto-muted); font-size: 0.75rem; font-family: inherit;
+    padding: 0.3rem 0.6rem; cursor: pointer; transition: all .15s;
+  }
+  .btn-sair:hover { color: var(--vermelho); border-color: var(--vermelho); }
+  /* Dentro da central o encerramento de sessão é feito pela própria central */
+  html[data-portal] .btn-sair { display: none; }
+
+  @media (max-width: 720px) {
+    html { font-size: 14px; }
+    .header { padding: 0.85rem 1rem; }
+    .container { padding: 1.1rem 1rem; }
+    .kpi-valor { font-size: 1.3rem; }
+    .grafico-box.alto { height: 300px; }
+    .grafico-box.medio { height: 260px; }
+  }
+
+  /* ===== BUSCA ===== */
+  .busca-wrap { position: relative; flex: 1 1 260px; min-width: 220px; max-width: 420px; }
+  .busca {
+    width: 100%; background: var(--bg3); border: 1px solid var(--borda); color: var(--texto);
+    border-radius: 9px; padding: 0.5rem 2rem 0.5rem 2rem; font-size: 0.85rem;
+    font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  .busca:focus { border-color: var(--azul-claro); }
+  .busca::placeholder { color: #47536b; }
+  .busca-icone {
+    position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%);
+    color: var(--texto-muted); font-size: 0.85rem; pointer-events: none;
+  }
+  .busca-limpar {
+    position: absolute; right: 0.45rem; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; color: var(--texto-muted);
+    font-size: 1rem; cursor: pointer; padding: 0 .2rem; line-height: 1; font-family: inherit;
+  }
+  .busca-limpar:hover { color: var(--vermelho); }
+
+  /* ===== LINHAS CLICÁVEIS ===== */
+  tbody tr.clicavel { cursor: pointer; transition: background .12s; }
+  tbody tr.clicavel:hover { background: rgba(59,130,246,0.10); }
+  tbody tr.clicavel:hover td:first-child { box-shadow: inset 3px 0 0 var(--azul-claro); }
+  .dica-clique {
+    font-size: 0.72rem; color: var(--texto-muted); margin-left: auto;
+    display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
+  }
+
+  /* ===== MODAL DE DETALHE ===== */
+  .modal-fundo {
+    position: fixed; inset: 0; z-index: 900;
+    background: rgba(5,8,15,0.72); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+    opacity: 0; transition: opacity .16s;
+  }
+  .modal-fundo.aberto { opacity: 1; }
+  .modal {
+    width: 100%; max-width: 660px; max-height: 88vh; overflow-y: auto;
+    background: var(--bg2); border: 1px solid var(--borda); border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+    transform: translateY(8px); transition: transform .16s;
+  }
+  .modal-fundo.aberto .modal { transform: translateY(0); }
+  .modal::-webkit-scrollbar { width: 9px; }
+  .modal::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 5px; }
+  .modal-topo {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.15rem 1.35rem 0.9rem; border-bottom: 1px solid var(--borda);
+    position: sticky; top: 0; background: var(--bg2); z-index: 2;
+    border-radius: 14px 14px 0 0;
+  }
+  .modal-titulo { font-size: 1.02rem; font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; }
+  .modal-sub { font-size: 0.78rem; color: var(--texto-muted); margin-top: 0.2rem; line-height: 1.45; }
+  .modal-fechar {
+    margin-left: auto; flex-shrink: 0; background: transparent;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    color: var(--texto-muted); font-size: 1.05rem; line-height: 1;
+    padding: 0.32rem 0.55rem; cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .modal-fechar:hover { color: var(--vermelho); border-color: var(--vermelho); }
+  .modal-corpo { padding: 1.1rem 1.35rem 1.35rem; }
+  .modal-bloco { margin-bottom: 1.15rem; }
+  .modal-bloco:last-child { margin-bottom: 0; }
+  .modal-bloco-titulo {
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--texto-muted); font-weight: 700; margin-bottom: 0.5rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--borda);
+  }
+  .modal-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.7rem 1.1rem; }
+  .modal-campo { min-width: 0; }
+  .modal-campo.largo { grid-column: 1 / -1; }
+  .modal-rotulo {
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--texto-muted); font-weight: 700; margin-bottom: 0.15rem;
+  }
+  .modal-valor { font-size: 0.9rem; font-weight: 600; word-break: break-word; line-height: 1.45; }
+  .modal-valor.grande { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
+  .modal-valor.muted { color: var(--texto-muted); font-weight: 500; }
+  .modal-valor.texto { font-weight: 500; white-space: pre-wrap; font-size: 0.85rem; }
+  .modal-nota {
+    margin-top: 0.9rem; padding: 0.7rem 0.85rem; border-radius: 9px;
+    background: var(--bg3); border-left: 3px solid var(--azul-claro);
+    font-size: 0.8rem; color: var(--texto-muted); line-height: 1.55;
+  }
+  .modal-nota.alerta { border-left-color: var(--amarelo); background: rgba(245,158,11,0.07); }
+  .modal-nota.critico { border-left-color: var(--vermelho); background: rgba(239,68,68,0.07); }
+  .modal-nota b { color: var(--texto); }
+  .modal-acoes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.1rem; }
+  .modal-acao {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.45rem 0.8rem; border-radius: 8px; text-decoration: none;
+    background: var(--bg3); border: 1px solid var(--borda);
+    color: var(--texto); font-size: 0.8rem; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all .15s;
+  }
+  .modal-acao:hover { border-color: var(--azul-claro); color: #fff; }
+
+  @media (max-width: 720px) {
+    .modal { max-height: 92vh; }
+    .modal-campos { grid-template-columns: 1fr; }
+  }
+
+  .filtros .sep { width: 1px; align-self: stretch; background: var(--borda); margin: 0 .35rem; }
+
+  /* Termômetro */
+  .termo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .9rem; }
+  .termo-card {
+    background: var(--bg2); border: 1px solid var(--borda); border-top: 3px solid var(--texto-muted);
+    border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow);
+  }
+  .termo-area { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--texto-muted); font-weight: 700; }
+  .termo-nota { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-top: .35rem; }
+  .termo-nota span { font-size: .85rem; font-weight: 600; color: var(--texto-muted); letter-spacing: 0; }
+  .termo-status { font-size: .82rem; font-weight: 700; margin-top: .1rem; }
+  .termo-detalhe { font-size: .74rem; color: var(--texto-muted); margin-top: .45rem; padding-top: .45rem; border-top: 1px solid var(--borda); }
+
+  /* Alertas */
+  .alerta-lista { display: flex; flex-direction: column; gap: .7rem; }
+  .alerta {
+    background: var(--bg2); border: 1px solid var(--borda); border-left: 3px solid var(--texto-muted);
+    border-radius: var(--radius); padding: .95rem 1.1rem; cursor: pointer;
+    transition: background .13s, border-color .13s, transform .13s;
+  }
+  .alerta:hover { background: var(--bg3); transform: translateX(2px); }
+  .alerta.critico { border-left-color: var(--vermelho); }
+  .alerta.alto { border-left-color: var(--amarelo); }
+  .alerta.medio { border-left-color: var(--azul-claro); }
+  .alerta-topo { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .45rem; }
+  .alerta-area { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--texto-muted); font-weight: 700; }
+  .alerta-metrica { font-size: .8rem; font-weight: 800; color: var(--texto); }
+  .alerta-impacto { font-size: .76rem; font-weight: 700; color: var(--vermelho); background: var(--vermelho-fraco); padding: .1rem .45rem; border-radius: 5px; }
+  .alerta-impacto.potencial { color: var(--verde); background: var(--verde-fraco); }
+  .alerta-prazo { margin-left: auto; font-size: .72rem; color: var(--texto-muted); white-space: nowrap; }
+  .alerta-titulo { font-size: .96rem; font-weight: 700; line-height: 1.35; margin-bottom: .3rem; }
+  .alerta-resumo { font-size: .83rem; color: var(--texto-muted); line-height: 1.55; }
+  .alerta-resumo b { color: var(--texto); }
+  .alerta-rodape {
+    display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+    margin-top: .7rem; padding-top: .55rem; border-top: 1px solid var(--borda);
+    font-size: .75rem; color: var(--texto-muted);
+  }
+  .alerta-abrir { color: var(--azul-claro); font-weight: 600; }
+  @media (max-width: 720px) { .alerta-prazo { margin-left: 0; } }
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <form class="login-caixa" id="loginForm" autocomplete="on">
+    <img src="logo.png" alt="Borges Macedo Advocacia" class="login-logo" onerror="this.style.display='none'" />
+    <div class="login-titulo">Ambiente do CEO</div>
+    <div class="login-sub">Acesso restrito</div>
+
+    <div class="campo-grupo">
+      <label class="campo-rotulo" for="campoUsuario">Login</label>
+      <input class="campo-texto" type="text" id="campoUsuario" name="username"
+             autocomplete="username" placeholder="Usuário" required />
+    </div>
+    <div class="campo-grupo">
+      <label class="campo-rotulo" for="campoSenha">Senha</label>
+      <input class="campo-texto" type="password" id="campoSenha" name="password"
+             autocomplete="current-password" placeholder="••••••••" required />
+    </div>
+
+    <button type="submit" class="btn-entrar" id="btnEntrar">Entrar</button>
+    <div class="login-erro oculto" id="loginErro"></div>
+
+    <div class="login-rodape">
+      Painel exclusivo das lideranças.<br />
+      A sessão termina ao fechar a aba.
+    </div>
+  </form>
+</div>
+
+<header class="header oculto" id="cabecalho">
+  <div class="header-logo">
+    <img src="logo.png" alt="Borges Macedo Advocacia" class="logo-img" onerror="this.style.display='none'" />
+    <div class="logo-text">
+      <span class="logo-name">Ambiente do CEO</span>
+      <span class="logo-sub">Borges Macedo Advocacia · Visão consolidada de todas as áreas</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <button class="btn-atualizar" id="btnAtualizar">&#10227; Atualizar</button>
+      <button class="btn-sair" id="btnSair" title="Encerrar a sessão">Sair</button>
+    </div>
+    <span class="header-updated" id="atualizadoEm">—</span>
+  </div>
+</header>
+
+<div id="erroBox" class="erro-box oculto"></div>
+
+<div id="carregando" class="estado oculto">
+  <div class="spinner"></div>
+  Carregando dados da planilha…
+</div>
+
+<main class="container oculto" id="conteudo">
+  <section class="secao">
+    <div class="secao-titulo">Termômetro do Escritório</div>
+    <div class="secao-sub" id="subTermometro">—</div>
+    <div class="termo-grid" id="termometro"></div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Métricas de Comando</div>
+    <div class="secao-sub">Os números que definem se o mês fecha bem. Tudo lido ao vivo das planilhas.</div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Onde o Dinheiro Está Parado</div>
+    <div class="secao-sub">Capital já conquistado ou reconhecido que ainda não virou caixa. Cada barra é uma fila que alguém precisa destravar.</div>
+    <div class="resumo-grid" id="resumoCapital"></div>
+    <div class="card">
+      <div class="grafico-box medio"><canvas id="grafCapital"></canvas></div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Central de Alertas</div>
+    <div class="secao-sub">Ordenados por severidade e por impacto financeiro. <b>Clique em qualquer alerta</b> para ver o diagnóstico completo, a proposta de solução e como medir se funcionou.</div>
+    <div class="filtros" id="filtrosAlerta">
+      <span id="buscaCampo"></span>
+      <button type="button" class="chip ativo" data-sev="todos">Todos</button>
+      <button type="button" class="chip" data-sev="critico">Críticos</button>
+      <button type="button" class="chip" data-sev="alto">Altos</button>
+      <button type="button" class="chip" data-sev="medio">Médios</button>
+      <div class="sep"></div>
+      <button type="button" class="chip ativo" data-area="todas">Todas as áreas</button>
+      <button type="button" class="chip" data-area="Comercial">Comercial</button>
+      <button type="button" class="chip" data-area="Operacional">Operacional</button>
+      <button type="button" class="chip" data-area="Financeiro">Financeiro</button>
+      <button type="button" class="chip" data-area="Risco">Risco</button>
+    </div>
+    <div class="alerta-lista" id="listaAlertas"></div>
+    <div class="secao-sub" id="notaAlertas" style="margin:.8rem 0 0 0"></div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Agenda do CEO — Esta Semana</div>
+    <div class="secao-sub">O que exige decisão sua, não do time. Se nada for feito aqui, o resto do painel não muda no mês que vem.</div>
+    <div class="card">
+      <div class="tabela-wrap">
+        <table id="tabelaAgenda">
+          <thead><tr><th>Decisão</th><th>Área</th><th>Em jogo</th><th>Se não decidir</th><th>Prazo</th></tr></thead>
+          <tbody id="corpoAgenda"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Vazamentos do Funil</div>
+    <div class="secao-sub">Onde o esforço já pago pelo escritório se perde antes de virar receita — do lead à sentença executada.</div>
+    <div class="card">
+      <div class="grafico-box alto"><canvas id="grafVazamento"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <div class="tabela-wrap">
+        <table id="tabelaVazamento">
+          <thead><tr><th>Etapa</th><th>Entrou</th><th>Passou</th><th>Perdeu</th><th>Conversão</th><th>Leitura</th></tr></thead>
+          <tbody id="corpoVazamento"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Ritmo do Escritório</div>
+    <div class="secao-sub">Doze meses de receita creditada, contratos fechados e produção técnica — para separar tendência de oscilação.</div>
+    <div class="card">
+      <div class="grafico-box alto"><canvas id="grafRitmo"></canvas></div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Concentração e Dependências</div>
+    <div class="secao-sub">Riscos que não aparecem no resultado do mês, mas definem a fragilidade do negócio.</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="secao-sub" style="margin:0 0 .6rem 0">Maiores contrapartes por valor em execução</div>
+        <div class="grafico-box medio"><canvas id="grafConcentracao"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="secao-sub" style="margin:0 0 .6rem 0">Carga operacional por responsável</div>
+        <div class="grafico-box medio"><canvas id="grafPessoas"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Confiabilidade dos Dados</div>
+    <div class="secao-sub">Um painel só vale o que vale o preenchimento da planilha. Aqui está o que hoje impede uma leitura 100% confiável.</div>
+    <div class="card">
+      <div class="tabela-wrap">
+        <table id="tabelaQualidade">
+          <thead><tr><th>Fonte</th><th>Registros</th><th>Lacuna encontrada</th><th>Efeito na leitura</th><th>Confiança</th></tr></thead>
+          <tbody id="corpoQualidade"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="rodape">
+  Borges Macedo Advocacia · Visão consolidada de todas as áreas · Atualização automática a cada 5 min<br />
+  <a href="#" id="linkPlanilha" target="_blank" rel="noopener">Abrir planilha no Google Sheets</a>
+</footer>
+
+<script>
+/* =========================================================================
+   COFRES — {SHEET_ID, GOOGLE_API_KEY} cifrados com AES-256-GCM, um cofre por
+   perfil autorizado. Este painel é exclusivo das lideranças: só os perfis
+   Administração e Lideranças têm cofre aqui. Sem a credencial correta a
+   decifragem falha e a página não sabe qual planilha ler.
+   ========================================================================= */
+const COFRES = [
+  /* Administração */
+  {"v":1,"it":310000,"salt":"IrogLkbQu5FGOyxFMNd12Q==","iv":"edO3RzDDTEIJC10l","ct":"MTQ2qvWjXHeDddrPiJHpJS0/2hfceR+hBe3BZXeYji7vXxqtBrljVR3briId9UCUzVau8NNxzZcp2PmEhpZC1Gzktf2xg68X7mTWyoDMBl9y+/L41MKwI9kwPinr7/BdxfxXkEFYyHmAzZIAfDIZ8h4VrKW1QlnXif+01mlZhSr24H5cQUqVF1e6UcEUe8FhLW6ABSlo27IyjcGKmD/cJ9wFQRFd5QxUPFXxkIardxuYgj05Ja+8BPEVd+2NV/OCYLTtcPVLKHXth+gOM1XJEEOG6z35GqS2zfMzxiefVAyHLwpsjKXSyNT2G06SGQ6RjF2G1N+MbJPSBKxHNjnjivGtmDJu4/a4a8g4ariToH21/H3knOT/ViPnoi6YNN6rJna2fXZElFF4z9bvoASWS30TF+J+ooWs5cBPNWX8uTsM1M79SaWru3+zQo7f7huoYBNNvPEU+BCRk+Z3SQfzgXbrk+OSsQB9n5HTF2qfYR6ojW66KyJHG+8YViediROOjrMNalLZg9Ln3oVCVL9vnf4P2BnAsppJsvybsMY+UYmTyTL8SRn0L/nX735HU8MCE7e1pgTs"},
+  /* Lideranças */
+  {"v":1,"it":310000,"salt":"FMrJVrk8TPtHMB91EdKG6A==","iv":"9OmHlI/X92Qi6tJJ","ct":"M++nE/omm+fuazOJNQXBI+I6lsdJzNh3V9gFBWOkNe0aOuGZL3KhsQCIiK3VAwNUX/6WdhQUC5w/taw51H9ZsCLpufhrNM0BknAFZl/HZVl+qt1hyfUsTd7dVoW1CUvrBOtoBa6mEqEtP44T/gzdFSxlUf3x41r42eSK9t0ifdSgZI+IbinCN5ZXIi6DqMro+m8pTrMnnFt7jFXlsyx1urvryl2uIGh5vKvue15B/yT2ajFDJzz2e6WW2dkcO1ftevJ5dBkDzH8uJD2Vx7tL5wzSVnxaFxEvzdOSpdtB97zpz6wNjzEskumV3/XfVU26M7l2bOoyfLI+xmyQDWAEo4VyVGTywkrGl3cWI7O+WkU8Z/uDVYCi/+p0dwvQvsxlOkXxtjVl5J1T3qbp8hhw+WAq3IirBoCO6y7P7wtYCG8Pw19g+Wj6RoEXWN7r2lhzq1BcZpkhUdgch4R3WwP9IWxGmssCzbk+lY7cvhXmpXxNBJDKDO77JcdxIExJYkkY48hXiVefRsWGdpDOmK/JzcHKCihvfJF+xmFU+qkw/x39T4Do6UxmunPKrSpcoINEFxobrG2h"}
+];
+
+const b64bytes = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+const normUsuario = u => u.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+async function abrirUmCofre(cofre, usuario, senha) {
+  const enc = new TextEncoder();
+  const material = await crypto.subtle.importKey(
+    'raw', enc.encode(normUsuario(usuario) + '\n' + senha), 'PBKDF2', false, ['deriveKey']);
+  const chave = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: b64bytes(cofre.salt), iterations: cofre.it, hash: 'SHA-256' },
+    material, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  const claro = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: b64bytes(cofre.iv) }, chave, b64bytes(cofre.ct));
+  return JSON.parse(new TextDecoder().decode(claro));
+}
+
+async function abrirCofre(usuario, senha) {
+  for (const cofre of COFRES) {
+    try { return await abrirUmCofre(cofre, usuario, senha); } catch (e) {}
+  }
+  throw new Error('credenciais sem acesso a este painel');
+}
+
+const CONFIG = { SHEET_ID: null, GOOGLE_API_KEY: null, AUTO_REFRESH_MIN: 5 };
+
+/* ===== utilitários comuns ===== */
+const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmtBRL0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+const fmtNum = new Intl.NumberFormat('pt-BR');
+function moeda(v) { return fmtBRL.format(v || 0); }
+function moedaCurta(v) { return fmtBRL0.format(v || 0); }
+function num(v) { return fmtNum.format(v || 0); }
+function pct1(v) { return (v === null || !isFinite(v)) ? '—' : v.toFixed(1).replace('.', ',') + '%'; }
+function pct0(v) { return (v === null || !isFinite(v)) ? '—' : Math.round(v) + '%'; }
+
+function parseNumBR(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  if (v === null || v === undefined) return 0;
+  let t = String(v).replace(/\u00a0/g, ' ').trim();
+  if (t === '' || t === '-') return 0;
+  t = t.replace(/R\$/gi, '').replace(/\s/g, '');
+  if (t === '' || t === '-') return 0;
+  const negativo = t.startsWith('-') || /^\(.*\)$/.test(t);
+  t = t.replace(/[()\-+]/g, '');
+  t = t.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(t);
+  if (!isFinite(n)) return 0;
+  return negativo ? -n : n;
+}
+
+/** dd/mm/aaaa -> Date. Datas-fantasma do Sheets (1899/1900) contam como vazio. */
+function parseDataBR(v) {
+  if (!v) return null;
+  const m = String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return null;
+  let ano = Number(m[3]);
+  if (ano < 100) ano += 2000;
+  if (ano < 1950) return null;
+  const dt = new Date(ano, Number(m[2]) - 1, Number(m[1]));
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_CURTO = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_NORM = MESES.map(m => m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
+
+/** "Agosto/25", "Agosto/2025" -> {ano, mes}. "Dezembro/99" = vazio. */
+function parseMesRotulo(v) {
+  if (!v) return null;
+  const t = String(v).trim();
+  const m = t.match(/^([A-Za-zÀ-ÿ]+)\s*\/\s*(\d{2,4})$/);
+  if (!m) return null;
+  const nome = m[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const idx = MESES_NORM.findIndex(x => x === nome);
+  if (idx < 0) return null;
+  let ano = Number(m[2]);
+  if (ano < 100) ano += 2000;
+  if (ano < 2015 || ano > 2100) return null;   // Dezembro/99 -> 2099, descartado
+  return { ano, mes: idx };
+}
+function ordemMes(i) { return i.ano * 12 + i.mes; }
+function labelMes(i) { return MESES_CURTO[i.mes] + '/' + String(i.ano).slice(2); }
+function labelMesData(d) { return MESES_CURTO[d.getMonth()] + '/' + String(d.getFullYear()).slice(2); }
+function hojeZerado() { const h = new Date(); h.setHours(0,0,0,0); return h; }
+function diasEntre(a, b) { return Math.round((b - a) / 86400000); }
+
+function colIdx(letra) {
+  let n = 0;
+  for (const c of letra.toUpperCase()) n = n * 26 + (c.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+/** Lê uma célula por nome de cabeçalho, com fallback pela letra da coluna. */
+function campo(linha, cab, nome, letra) {
+  let i = cab.indexOf(nome);
+  if (i < 0 && letra) i = colIdx(letra);
+  if (i < 0) return '';
+  const v = linha[i];
+  return v === undefined || v === null ? '' : String(v).trim();
+}
+
+/* ===== leitura via Sheets API v4 ===== */
+async function lerAbas(ranges) {
+  const base = 'https://sheets.googleapis.com/v4/spreadsheets/' + CONFIG.SHEET_ID + '/values:batchGet';
+  const p = new URLSearchParams();
+  ranges.forEach(r => p.append('ranges', r));
+  p.append('valueRenderOption', 'FORMATTED_VALUE');
+  p.append('key', CONFIG.GOOGLE_API_KEY);
+  const resp = await fetch(base + '?' + p.toString(), { cache: 'no-store' });
+  if (!resp.ok) throw new Error('Sheets API ' + resp.status);
+  const json = await resp.json();
+  return (json.valueRanges || []).map(vr => vr.values || []);
+}
+
+/** Separa cabeçalho e linhas com conteúdo; remove repetições do cabeçalho no meio. */
+function tabela(rows) {
+  if (!rows || !rows.length) return { cab: [], linhas: [] };
+  const cab = rows[0].map(h => String(h).trim());
+  const assinatura = cab.filter(Boolean).slice(0, 3).join('|');
+  const linhas = rows.slice(1).filter(r => {
+    if (!r.some(c => String(c).trim())) return false;
+    const sig = r.map(c => String(c).trim()).filter(Boolean).slice(0, 3).join('|');
+    return sig !== assinatura;
+  });
+  return { cab, linhas };
+}
+
+/* ===== gráficos ===== */
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Segoe UI', system-ui, -apple-system, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.boxWidth = 8;
+Chart.defaults.plugins.legend.labels.padding = 14;
+
+const COR_AZUL = '#3b82f6', COR_VERDE = '#22c55e', COR_VERMELHO = '#ef4444',
+      COR_AMARELO = '#f59e0b', COR_ROXO = '#a855f7', COR_CIANO = '#06b6d4',
+      COR_ROSA = '#ec4899', COR_MUTED = '#64748b', COR_BORDA = 'rgba(255,255,255,0.06)';
+const PALETA = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6','#8b5cf6','#eab308'];
+
+let graficos = {};
+function destruir(id) { if (graficos[id]) { graficos[id].destroy(); delete graficos[id]; } }
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
+function cartaoKPI(nome, valor, cor, rodape, pct) {
+  return '<div class="card kpi ' + cor + '">' +
+    '<div class="kpi-topo"><span class="kpi-nome">' + nome + '</span>' +
+    (pct !== undefined && pct !== null ? '<span class="kpi-pct ' + (cor === 'vermelho' ? 'vermelho' : cor === 'amarelo' ? 'amarelo' : cor === 'verde' ? 'verde' : 'neutro') + '">' + pct + '</span>' : '') +
+    '</div><div class="kpi-valor">' + valor + '</div>' +
+    (rodape ? '<div class="kpi-rodape"><span>' + rodape + '</span></div>' : '') + '</div>';
+}
+function itemResumo(nome, valor, nota, cor) {
+  return '<div class="resumo-item"><div class="resumo-nome"' + (cor ? ' style="color:' + cor + '"' : '') + '>' + nome + '</div>' +
+    '<div class="resumo-valor">' + valor + '</div>' +
+    '<div class="resumo-nota">' + (nota || '') + '</div></div>';
+}
+function obsCard(tipo, icone, titulo, texto) {
+  return '<div class="obs ' + tipo + '"><div class="obs-icone">' + icone + '</div><div class="obs-corpo">' +
+    '<div class="obs-titulo">' + titulo + '</div><div class="obs-texto">' + texto + '</div></div></div>';
+}
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function topN(mapa, n, rotuloOutros) {
+  const e = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
+  const topo = e.slice(0, n);
+  const resto = e.slice(n).reduce((s, [, v]) => s + v, 0);
+  if (resto > 0) topo.push([rotuloOutros || 'Outros', resto]);
+  return topo;
+}
+
+/* =========================================================================
+   DETALHE EM JANELA (MODAL)
+   Uso: abrirDetalhe({ titulo, sub, blocos:[{titulo, campos:[{r,v,largo,classe}]}],
+                       notas:[{tipo,html}], acoes:[{rotulo,href}] })
+   Linhas de tabela viram clicáveis com `tabelaClicavel(tbodyId, lista, montador)`.
+   ========================================================================= */
+(function () {
+  const fundo = document.createElement('div');
+  fundo.className = 'modal-fundo oculto';
+  fundo.id = 'modalFundo';
+  fundo.innerHTML =
+    '<div class="modal" role="dialog" aria-modal="true">' +
+      '<div class="modal-topo">' +
+        '<div><div class="modal-titulo" id="modalTitulo"></div>' +
+        '<div class="modal-sub" id="modalSub"></div></div>' +
+        '<button class="modal-fechar" id="modalFechar" title="Fechar (Esc)">&#10005;</button>' +
+      '</div>' +
+      '<div class="modal-corpo" id="modalCorpo"></div>' +
+    '</div>';
+  document.body.appendChild(fundo);
+
+  fundo.addEventListener('click', ev => { if (ev.target === fundo) fecharDetalhe(); });
+  document.getElementById('modalFechar').addEventListener('click', fecharDetalhe);
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && !fundo.classList.contains('oculto')) fecharDetalhe();
+  });
+})();
+
+function fecharDetalhe() {
+  const f = document.getElementById('modalFundo');
+  f.classList.remove('aberto');
+  setTimeout(() => f.classList.add('oculto'), 160);
+}
+
+function abrirDetalhe(cfg) {
+  const f = document.getElementById('modalFundo');
+  document.getElementById('modalTitulo').innerHTML = cfg.titulo || '';
+  document.getElementById('modalSub').innerHTML = cfg.sub || '';
+
+  let html = '';
+  (cfg.blocos || []).forEach(bl => {
+    const campos = (bl.campos || []).filter(c => c && c.v !== undefined && c.v !== null && c.v !== '');
+    if (!campos.length) return;
+    html += '<div class="modal-bloco">' +
+      (bl.titulo ? '<div class="modal-bloco-titulo">' + bl.titulo + '</div>' : '') +
+      '<div class="modal-campos">' +
+      campos.map(c =>
+        '<div class="modal-campo' + (c.largo ? ' largo' : '') + '">' +
+        '<div class="modal-rotulo">' + c.r + '</div>' +
+        '<div class="modal-valor ' + (c.classe || '') + '">' + c.v + '</div></div>'
+      ).join('') + '</div></div>';
+  });
+  (cfg.notas || []).forEach(n => {
+    if (!n || !n.html) return;
+    html += '<div class="modal-nota ' + (n.tipo || '') + '">' + n.html + '</div>';
+  });
+  if (cfg.acoes && cfg.acoes.length) {
+    html += '<div class="modal-acoes">' + cfg.acoes.filter(Boolean).map(a =>
+      '<a class="modal-acao" href="' + a.href + '" target="_blank" rel="noopener">' + a.rotulo + '</a>'
+    ).join('') + '</div>';
+  }
+  document.getElementById('modalCorpo').innerHTML = html ||
+    '<div style="color:var(--texto-muted);font-size:.85rem">Sem dados detalhados para este registro.</div>';
+
+  f.classList.remove('oculto');
+  requestAnimationFrame(() => f.classList.add('aberto'));
+}
+
+/** Marca as linhas de um tbody como clicáveis e liga cada uma ao seu registro. */
+function tabelaClicavel(tbodyId, lista, montador) {
+  const tb = document.getElementById(tbodyId);
+  if (!tb) return;
+  Array.from(tb.querySelectorAll('tr')).forEach((tr, i) => {
+    if (i >= lista.length || !lista[i]) return;
+    tr.classList.add('clicavel');
+    tr.title = 'Clique para ver os detalhes';
+    tr.addEventListener('click', () => abrirDetalhe(montador(lista[i])));
+  });
+}
+
+/** Rótulo padrão avisando que a tabela é clicável. */
+function dicaClique(texto) {
+  return '<span class="dica-clique">&#128065; ' + (texto || 'clique em uma linha para ver os detalhes') + '</span>';
+}
+
+/* =========================================================================
+   BUSCA
+   ========================================================================= */
+/** Normaliza para busca: sem acento, minúsculo, só dígitos preservados. */
+function chaveBusca(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+/** Termo casa se todas as palavras aparecerem no texto; dígitos comparam só dígitos. */
+function casaBusca(termo, ...campos) {
+  const t = chaveBusca(termo);
+  if (!t) return true;
+  const texto = campos.map(c => chaveBusca(c)).join(' ');
+  const soDig = texto.replace(/\D/g, '');
+  return t.split(/\s+/).every(p => {
+    if (/^\d{3,}$/.test(p)) return soDig.includes(p) || texto.includes(p);
+    return texto.includes(p);
+  });
+}
+/** Monta o HTML de um campo de busca. */
+function campoBusca(id, placeholder) {
+  return '<div class="busca-wrap">' +
+    '<span class="busca-icone">&#128269;</span>' +
+    '<input type="search" class="busca" id="' + id + '" placeholder="' + placeholder + '" autocomplete="off" />' +
+    '<button type="button" class="busca-limpar oculto" id="' + id + 'Limpar" title="Limpar">&#10005;</button></div>';
+}
+/** Liga o campo de busca a um callback, com debounce curto. */
+function ligarBusca(id, aoDigitar) {
+  const el = document.getElementById(id);
+  const limpar = document.getElementById(id + 'Limpar');
+  if (!el) return;
+  let t = null;
+  const disparar = () => {
+    limpar.classList.toggle('oculto', !el.value);
+    clearTimeout(t);
+    t = setTimeout(() => aoDigitar(el.value), 120);
+  };
+  el.addEventListener('input', disparar);
+  limpar.addEventListener('click', () => { el.value = ''; el.focus(); disparar(); });
+}
+
+
+/* =========================================================================
+   APLICAÇÃO
+   ========================================================================= */
+/* =========================================================================
+   AMBIENTE DO CEO
+   Consolida seis planilhas em um só quadro. Cada regra de alerta traz o
+   diagnóstico, o impacto em dinheiro quando é possível medir, a proposta de
+   solução e o indicador que prova que a medida funcionou.
+   ========================================================================= */
+
+let BASE = null;
+const FILTRO = { sev: 'todos', area: 'todas', termo: '' };
+
+/* As abas são identificadas por GID, não por nome: as planilhas do escritório
+   são renomeadas com frequência (a aba "ITIV/Rec J." virou "ITIV", por
+   exemplo) e um range por nome quebraria silenciosamente. O painel lê os
+   metadados de cada planilha, descobre o nome atual de cada gid e só então
+   monta os ranges. */
+async function nomesDasAbas(sheetId) {
+  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId +
+    '?key=' + CONFIG.GOOGLE_API_KEY + '&fields=sheets.properties(sheetId,title)';
+  const resp = await fetch(url, { cache: 'no-store' });
+  if (!resp.ok) throw new Error('Metadados ' + resp.status + ' (planilha ' + sheetId.slice(0, 8) + '…)');
+  const json = await resp.json();
+  const mapa = {};
+  (json.sheets || []).forEach(s => { mapa[s.properties.sheetId] = s.properties.title; });
+  return mapa;
+}
+
+/** abas: [{gid, cols}] — devolve uma tabela por aba, na mesma ordem. */
+async function lerPlanilha(sheetId, abas) {
+  const nomes = await nomesDasAbas(sheetId);
+  const faltando = abas.filter(a => !nomes[a.gid]);
+  if (faltando.length) {
+    throw new Error('Aba não encontrada (gid ' + faltando.map(a => a.gid).join(', ') +
+      ') na planilha ' + sheetId.slice(0, 8) + '… — foi excluída?');
+  }
+  const base = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values:batchGet';
+  const p = new URLSearchParams();
+  abas.forEach(a => p.append('ranges', "'" + nomes[a.gid].replace(/'/g, "''") + "'!A1:" + a.cols));
+  p.append('valueRenderOption', 'FORMATTED_VALUE');
+  p.append('key', CONFIG.GOOGLE_API_KEY);
+  const resp = await fetch(base + '?' + p.toString(), { cache: 'no-store' });
+  if (!resp.ok) throw new Error('Sheets API ' + resp.status + ' (planilha ' + sheetId.slice(0, 8) + '…)');
+  const json = await resp.json();
+  return (json.valueRanges || []).map(vr => tabela(vr.values || []));
+}
+
+const FONTES = {
+  alvaras: [{ gid: 1346622463, cols: 'X1000' }, { gid: 1661146228, cols: 'X1000' }, { gid: 1211662487, cols: 'X1000' }],
+  clientes: [{ gid: 0, cols: 'E3000' }, { gid: 1671705248, cols: 'G3000' }, { gid: 872695563, cols: 'B600' }],
+  crm: [{ gid: 150093404, cols: 'X2100' }, { gid: 320742518, cols: 'L3500' }, { gid: 845920680, cols: 'AG4300' }],
+  diligencias: [{ gid: 2060633958, cols: 'S600' }, { gid: 275564192, cols: 'H1000' }],
+  controladoria: [{ gid: 1679846457, cols: 'G700' }, { gid: 460469416, cols: 'G800' }, { gid: 106772824, cols: 'H800' }],
+  execucoes: [
+    { gid: 862804403, cols: 'K200' },   // Aguard. Pgto.
+    { gid: 1802163872, cols: 'K200' },  // ITIV (ex-"ITIV/Rec J.")
+    { gid: 302613296, cols: 'I200' },   // Penhora
+    { gid: 1631806568, cols: 'J200' },  // Impug. à Exec.
+    { gid: 1101170226, cols: 'K200' },  // Alvarás
+    { gid: 1024713451, cols: 'G200' },  // Acordos
+    { gid: 898928208, cols: 'G200' },   // Procedentes
+    { gid: 1232605002, cols: 'K200' }   // Fase Recursal
+  ]
+};
+
+async function buscarTudo() {
+  const S = CONFIG.SHEETS;
+  const [alv, cli, crm, dil, ctr, exe] = await Promise.all([
+    lerPlanilha(S.alvaras, FONTES.alvaras),
+    lerPlanilha(S.clientes, FONTES.clientes),
+    lerPlanilha(S.crm, FONTES.crm),
+    lerPlanilha(S.diligencias, FONTES.diligencias),
+    lerPlanilha(S.controladoria, FONTES.controladoria),
+    lerPlanilha(S.execucoes, FONTES.execucoes)
+  ]);
+  return { alv, cli, crm, dil, ctr, exe };
+}
+
+/* ===== helpers ===== */
+const dt = x => x ? x.toLocaleDateString('pt-BR') : '—';
+function normTxt(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+const ehSim = v => /^sim/i.test(String(v || '').trim());
+function media(v) { return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; }
+function soDig(s) { return String(s || '').replace(/\D/g, ''); }
+function quitado(v) {
+  const t = normTxt(v);
+  return t.startsWith('pago') || t.startsWith('dispensad') || t === 'nao ha';
+}
+
+/* =========================================================================
+   CONSOLIDAÇÃO
+   ========================================================================= */
+function consolidar(d, hoje) {
+  const R = { hoje };
+
+  // ---------- ALVARÁS E ACORDOS (receita realizada) ----------
+  const alvLinhas = [];
+  [2024, 2025, 2026].forEach((ano, i) => {
+    const { cab, linhas } = d.alv[i];
+    linhas.forEach(l => {
+      const cliente = campo(l, cab, 'Cliente', 'B') || campo(l, cab, 'Cliente (Nome Completo)', 'B');
+      const creditado = parseNumBR(campo(l, cab, 'Valor Creditado', 'G'));
+      if (!cliente && !creditado) return;
+      const dataCred = parseDataBR(campo(l, cab, 'Data do Crédito em Conta', 'H'));
+      alvLinhas.push({
+        ano, cliente, creditado,
+        processo: campo(l, cab, 'Processo', 'D'),
+        solicitado: parseNumBR(campo(l, cab, 'Valor Solicitado', 'F')),
+        honorarios: parseNumBR(campo(l, cab, 'Valor dos Honorários', 'K')),
+        parceiros: parseNumBR(campo(l, cab, 'Repasse a Parceiros', 'N')),
+        devidoCliente: parseNumBR(campo(l, cab, 'Valor Devido ao Cliente')),
+        dataCred,
+        repasseBM: campo(l, cab, 'Repasse ao BM', 'L'),
+        dataRepasseBM: parseDataBR(campo(l, cab, 'Data Repasse ao BM', 'M')),
+        repasseCliente: campo(l, cab, 'Repasse ao Cliente'),
+        dataRepasseCliente: parseDataBR(campo(l, cab, 'Data do Repasse ao Cliente')),
+        lancadoFluxo: campo(l, cab, 'Lançado no Fluxo de Honorários')
+      });
+    });
+  });
+  const A = {
+    linhas: alvLinhas,
+    creditado: alvLinhas.reduce((s, x) => s + x.creditado, 0),
+    honorarios: alvLinhas.reduce((s, x) => s + x.honorarios, 0),
+    devidoCliente: alvLinhas.reduce((s, x) => s + x.devidoCliente, 0)
+  };
+  A.takeRate = A.creditado > 0 ? A.honorarios / A.creditado * 100 : null;
+  const semRateio = alvLinhas.filter(x => x.creditado > 0 && (x.honorarios + x.parceiros + x.devidoCliente) === 0);
+  A.semRateioQtd = semRateio.length;
+  A.semRateioValor = semRateio.reduce((s, x) => s + x.creditado, 0);
+  const pendBM = alvLinhas.filter(x => !quitado(x.repasseBM) && x.honorarios > 0);
+  A.pendBMQtd = pendBM.length; A.pendBMValor = pendBM.reduce((s, x) => s + x.honorarios, 0);
+  const pendCli = alvLinhas.filter(x => !quitado(x.repasseCliente) && x.devidoCliente > 0);
+  A.pendCliQtd = pendCli.length; A.pendCliValor = pendCli.reduce((s, x) => s + x.devidoCliente, 0);
+  const foraFluxo = alvLinhas.filter(x => x.ano >= 2025 && x.lancadoFluxo && !/^sim|^não há|^nao ha/i.test(x.lancadoFluxo));
+  A.foraFluxoQtd = foraFluxo.length; A.foraFluxoValor = foraFluxo.reduce((s, x) => s + x.honorarios, 0);
+  A.prazoRepasse = media(alvLinhas.filter(x => x.dataCred && x.dataRepasseCliente)
+    .map(x => diasEntre(x.dataCred, x.dataRepasseCliente)).filter(x => x >= 0 && x < 400));
+  // receita dos últimos 12 meses
+  const corte12 = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1);
+  A.receita12 = alvLinhas.filter(x => x.dataCred && x.dataCred >= corte12)
+    .reduce((s, x) => s + x.honorarios, 0);
+  R.alvaras = A;
+
+  // ---------- CRM (funil comercial) ----------
+  const analises = [];
+  const addAnalise = (idx, frente, mapa) => {
+    const { cab, linhas } = d.crm[idx];
+    linhas.forEach(l => {
+      const lead = campo(l, cab, mapa.lead, mapa.colLead);
+      const mes = parseMesRotulo(campo(l, cab, 'Mês', 'A'));
+      if (!lead && !mes) return;
+      const envio = parseDataBR(campo(l, cab, 'Data do envio', mapa.colEnvio));
+      const entrega = parseDataBR(campo(l, cab, 'Data da entrega', mapa.colEntrega));
+      const sit = normTxt(campo(l, cab, 'Situação', mapa.colSit));
+      analises.push({
+        frente, lead, mes,
+        viavel: sit.startsWith('viav'),
+        inviavel: sit.startsWith('inviav'),
+        pendente: sit.startsWith('pend'),
+        agendou: ehSim(campo(l, cab, 'Atendimento agendado?', mapa.colAg)),
+        sdr: campo(l, cab, 'SDR', mapa.colSdr) || 'Não informado',
+        recorte: campo(l, cab, mapa.recorte, mapa.colRecorte) || 'Não informado',
+        espera: envio && entrega ? diasEntre(envio, entrega) : null
+      });
+    });
+  };
+  addAnalise(0, 'Diagnóstico Saúde', { lead: 'Lead [NOME COMPLETO]', colLead: 'B', colEnvio: 'N', colEntrega: 'O', colSit: 'G', colAg: 'R', colSdr: 'D', recorte: 'Plano de Saúde', colRecorte: 'E' });
+  addAnalise(1, 'Parecer Bancário', { lead: 'Lead', colLead: 'B', colEnvio: 'H', colEntrega: 'I', colSit: 'E', colAg: 'J', colSdr: 'C', recorte: 'Instituição', colRecorte: 'D' });
+
+  const atend = [];
+  {
+    const { cab, linhas } = d.crm[2];
+    linhas.forEach(l => {
+      const dataAt = parseDataBR(campo(l, cab, 'Data do Atendimento', 'H'));
+      const st = campo(l, cab, 'Status do Atendimento', 'K');
+      const neg = normTxt(campo(l, cab, 'Status da Negociação', 'AB'));
+      const lead = campo(l, cab, 'Lead', 'A');
+      if (!lead && !dataAt) return;
+      atend.push({
+        lead, dataAt,
+        produto: campo(l, cab, 'Produto Jurídico', 'C') || 'Não informado',
+        closer: campo(l, cab, 'Closer', 'E') || 'Não informado',
+        realizado: /realizad/i.test(st), noShow: /no ?show/i.test(st),
+        ganho: neg.includes('ganho'), perdido: neg.includes('perdido'),
+        motivo: campo(l, cab, 'Motivo de Não Fechamento', 'AD'),
+        honorarios: parseNumBR(campo(l, cab, 'Honorários Iniciais', 'R'))
+      });
+    });
+  }
+  const C = {
+    analises, atend,
+    total: analises.length,
+    viaveis: analises.filter(x => x.viavel).length,
+    viavelSemAgenda: analises.filter(x => x.viavel && !x.agendou).length,
+    atendimentos: atend.length,
+    realizados: atend.filter(x => x.realizado).length,
+    noShow: atend.filter(x => x.noShow).length,
+    ganhos: atend.filter(x => x.ganho).length,
+    perdidos: atend.filter(x => x.perdido).length,
+    semDesfecho: atend.filter(x => x.realizado && !x.ganho && !x.perdido).length
+  };
+  C.winRate = (C.ganhos + C.perdidos) ? C.ganhos / (C.ganhos + C.perdidos) * 100 : null;
+  C.taxaNoShow = C.atendimentos ? C.noShow / C.atendimentos * 100 : null;
+  C.taxaViab = C.total ? C.viaveis / C.total * 100 : null;
+  C.slaMedio = media(analises.map(x => x.espera).filter(x => x !== null && x >= 0 && x < 120));
+  C.ticket = media(atend.filter(x => x.ganho && x.honorarios > 0).map(x => x.honorarios));
+  // valor perdido nos viáveis sem agenda (usa o ticket médio como proxy)
+  C.valorViavelSemAgenda = C.ticket ? C.viavelSemAgenda * C.ticket * (C.winRate || 0) / 100 : 0;
+  R.crm = C;
+
+  // ---------- CONTROLADORIA (compromissos com o cliente) ----------
+  const iniciais = [];
+  {
+    const { cab, linhas } = d.ctr[1];
+    linhas.forEach(l => {
+      const nome = campo(l, cab, 'NOME COMPLETO', 'E');
+      const fech = parseDataBR(campo(l, cab, 'DATA DO FECHAMENTO', 'A'));
+      if (!nome && !fech) return;
+      const prazo = parseDataBR(campo(l, cab, 'DATA MÁXIMA DO PROTOCOLO', 'B'));
+      const prot = parseDataBR(campo(l, cab, 'DATA DO EFETIVO PROTOCOLO', 'C'));
+      const dRaw = campo(l, cab, 'FOI PROTOCOLADA DENTRO DO PRAZO?', 'D');
+      iniciais.push({
+        nome, fech, prazo, prot,
+        protocolada: !!prot,
+        dentro: dRaw ? ehSim(dRaw) : (prot && prazo ? prot <= prazo : null),
+        atraso: prot && prazo ? diasEntre(prazo, prot) : null,
+        vencidaSemProt: !prot && prazo && prazo < hoje,
+        diasVencida: !prot && prazo ? diasEntre(prazo, hoje) : null
+      });
+    });
+  }
+  const onboarding = [];
+  {
+    const { cab, linhas } = d.ctr[0];
+    linhas.forEach(l => {
+      const nome = campo(l, cab, 'NOME COMPLETO', 'A');
+      const fech = parseDataBR(campo(l, cab, 'DATA DO FECHAMENTO', 'B'));
+      if (!nome && !fech) return;
+      const ag = campo(l, cab, 'ONBOARDING AGENDADA?', 'D');
+      const re = campo(l, cab, 'ONBOARDING REALIZADA?', 'F');
+      onboarding.push({
+        nome, fech, agendada: ehSim(ag), temRegistro: ag !== '',
+        realizada: ehSim(re), naoRealizada: /^n[aã]o/i.test(re)
+      });
+    });
+  }
+  const audiencias = [];
+  {
+    const { cab, linhas } = d.ctr[2];
+    linhas.forEach(l => {
+      const data = parseDataBR(campo(l, cab, 'DATA DA AUDIÊNCIA', 'A'));
+      const proc = campo(l, cab, 'PROCESSO', 'B');
+      if (!data && !proc) return;
+      const avisos = ['DATA 1º AVISO (1 MÊS ANTES)', 'DATA 2º AVISO (1 SEMANA ANTES)', 'ÚLTIMO AVISO (SEMANA DA AUDIÊNCIA)']
+        .map((n, i) => parseDataBR(campo(l, cab, n, ['D', 'E', 'F'][i]))).filter(Boolean).length;
+      audiencias.push({
+        data, processo: proc,
+        cliente: campo(l, cab, 'CLIENTE', 'C'),
+        ciente: ehSim(campo(l, cab, 'CLIENTE CIENTE?', 'G')),
+        avisos,
+        futura: data ? data >= hoje : false,
+        dias: data ? diasEntre(hoje, data) : null
+      });
+    });
+  }
+  const T = {
+    iniciais, onboarding, audiencias,
+    iniTotal: iniciais.length,
+    iniProt: iniciais.filter(x => x.protocolada).length,
+    iniDentro: iniciais.filter(x => x.protocolada && x.dentro === true).length,
+    iniFora: iniciais.filter(x => x.protocolada && x.dentro === false).length,
+    iniVencidas: iniciais.filter(x => x.vencidaSemProt).length,
+    onbSemRegistro: onboarding.filter(x => !x.temRegistro).length,
+    onbNaoRealizada: onboarding.filter(x => x.naoRealizada).length,
+    audFuturas: audiencias.filter(x => x.futura).length,
+    audSemCiencia: audiencias.filter(x => x.futura && !x.ciente).length,
+    audSemAviso: audiencias.filter(x => x.futura && x.avisos === 0).length,
+    aud7: audiencias.filter(x => x.futura && x.dias !== null && x.dias <= 7).length
+  };
+  T.taxaPrazo = (T.iniDentro + T.iniFora) ? T.iniDentro / (T.iniDentro + T.iniFora) * 100 : null;
+  T.atrasoMedio = media(iniciais.filter(x => x.atraso !== null && x.atraso > 0 && x.atraso < 400).map(x => x.atraso));
+  T.piorAtraso = Math.max(0, ...iniciais.filter(x => x.vencidaSemProt).map(x => x.diasVencida || 0));
+  R.controladoria = T;
+
+  // ---------- DILIGÊNCIAS ----------
+  const dilig = [];
+  {
+    const { cab, linhas } = d.dil[0];
+    linhas.forEach(l => {
+      const proc = campo(l, cab, 'PROCESSO', 'D');
+      const lanc = parseDataBR(campo(l, cab, 'DATA DO LANÇAMENTO DA DILIGÊNCIA', 'B'));
+      if (!proc && !lanc) return;
+      const st = normTxt(campo(l, cab, 'STATUS', 'J'));
+      dilig.push({
+        processo: proc, lanc,
+        tipo: campo(l, cab, 'TIPO DE DILIGÊNCIA', 'C') || 'Não informado',
+        vara: campo(l, cab, 'VARA', 'F') || 'Não informada',
+        tribunal: campo(l, cab, 'TRIBUNAL', 'G') || 'Não informado',
+        responsavel: campo(l, cab, 'RESPONSÁVEL PELA DILIGÊNCIA', 'K') || 'Não atribuída',
+        cumprida: st.startsWith('cumprid'),
+        idade: lanc ? diasEntre(lanc, hoje) : null,
+        temContato: ehSim(campo(l, cab, 'E-MAIL ENVIADO', 'P')) ||
+                    !!campo(l, cab, 'SERVIDOR QUE ATENDEU', 'Q') ||
+                    !!campo(l, cab, 'HISTÓRICO DE CONTATO COM O CARTÓRIO', 'S')
+      });
+    });
+  }
+  const valoresReceber = [];
+  {
+    const { cab, linhas } = d.dil[1];
+    linhas.forEach(l => {
+      const proc = campo(l, cab, 'PROCESSO', 'B');
+      if (!proc) return;
+      valoresReceber.push({ processo: proc, finalizada: ehSim(campo(l, cab, 'FINALIZADA', 'G')) });
+    });
+  }
+  const D = {
+    itens: dilig, valoresReceber,
+    total: dilig.length,
+    cumpridas: dilig.filter(x => x.cumprida).length,
+    abertas: dilig.filter(x => !x.cumprida).length,
+    semContato: dilig.filter(x => !x.temContato).length,
+    velhas15: dilig.filter(x => !x.cumprida && x.idade !== null && x.idade > 15).length,
+    valAbertas: valoresReceber.filter(x => !x.finalizada).length
+  };
+  D.taxaCumprimento = D.total ? D.cumpridas / D.total * 100 : null;
+  D.idadeMedia = media(dilig.filter(x => !x.cumprida && x.idade !== null && x.idade >= 0).map(x => x.idade));
+  const porResp = {};
+  dilig.forEach(x => { porResp[x.responsavel] = (porResp[x.responsavel] || 0) + 1; });
+  D.porResponsavel = Object.entries(porResp).sort((a, b) => b[1] - a[1]);
+  const top = D.porResponsavel.filter(([n]) => n !== 'Não atribuída')[0];
+  D.concentracaoPessoa = top && D.total ? { nome: top[0], qtd: top[1], pct: top[1] / D.total * 100 } : null;
+  R.diligencias = D;
+
+  // ---------- EXECUÇÕES (capital em execução) ----------
+  const ABAS_EXE = [
+    { i: 0, key: 'aguardPgto', nome: 'Aguard. Pgto.', valor: 'Valor a Receber', prazo: 'Fatal Pgto.' },
+    { i: 1, key: 'itivRecJ', nome: 'ITIV/Rec J.', valor: 'Valor a Receber', prazoTexto: 'Prazo Fatal Pgto' },
+    { i: 2, key: 'penhora', nome: 'Penhora', valor: 'Valor a Bloquear', prazo: 'Prazo Fatal Impugnação' },
+    { i: 3, key: 'impugExec', nome: 'Impug. à Exec.', valor: 'Valor a Receber' },
+    { i: 4, key: 'alvaras', nome: 'Alvarás', valor: 'Valor a Receber', situacao: 'Situação Alvará' },
+    { i: 5, key: 'acordos', nome: 'Acordos', valor: 'Valor a Receber', prazo: 'Fatal Pgto.' },
+    { i: 6, key: 'procedentes', nome: 'Procedentes', prazo: 'Fatal Para TEJ' },
+    { i: 7, key: 'faseRecursal', nome: 'Fase Recursal' }
+  ];
+  const E = { porAba: {}, total: 0, processos: 0, vencidos: 0, aVencer7: 0, diligenciar: 0, reus: {} };
+  ABAS_EXE.forEach(ab => {
+    const { cab, linhas } = d.exe[ab.i];
+    let valor = 0, qtd = 0, recebido = 0;
+    linhas.forEach(l => {
+      const proc = campo(l, cab, 'Processo', 'A');
+      if (!proc) return;
+      qtd++;
+      E.processos++;
+      const v = ab.valor ? parseNumBR(campo(l, cab, ab.valor)) : 0;
+      const sit = ab.situacao ? normTxt(campo(l, cab, ab.situacao)) : '';
+      const jaRecebido = sit === 'recebido';
+      if (jaRecebido) recebido += v; else valor += v;
+      if (normTxt(campo(l, cab, 'Diligenciar')) === 'sim') E.diligenciar++;
+      // prazos
+      if (ab.prazo) {
+        const dd = parseDataBR(campo(l, cab, ab.prazo));
+        if (dd && !jaRecebido) {
+          const dias = diasEntre(hoje, dd);
+          if (dias < 0) E.vencidos++;
+          else if (dias <= 7) E.aVencer7++;
+        }
+      }
+      if (ab.prazoTexto && normTxt(campo(l, cab, ab.prazoTexto)) === 'vencido') E.itivVencidos = (E.itivVencidos || 0) + 1;
+      const reu = campo(l, cab, 'Réu');
+      if (reu && v > 0 && !jaRecebido) E.reus[reu] = (E.reus[reu] || 0) + v;
+    });
+    E.porAba[ab.key] = { nome: ab.nome, valor, qtd, recebido };
+    E.total += valor;
+  });
+  R.execucoes = E;
+
+  // ---------- BASE DE CLIENTES ----------
+  const pessoas = [];
+  d.cli[0].linhas.forEach(l => {
+    const n = campo(l, d.cli[0].cab, 'Cliente', 'A');
+    if (n) pessoas.push({ tipo: 'PF', nome: n, doc: campo(l, d.cli[0].cab, 'CPF', 'B'), tel: campo(l, d.cli[0].cab, 'Telefone', 'C'), email: campo(l, d.cli[0].cab, 'E-mail', 'D') });
+  });
+  d.cli[1].linhas.forEach(l => {
+    const n = campo(l, d.cli[1].cab, 'Cliente', 'A');
+    if (n) pessoas.push({ tipo: 'PJ', nome: n, doc: campo(l, d.cli[1].cab, 'CNPJ', 'B'), tel: campo(l, d.cli[1].cab, 'Telefone', 'E'), email: campo(l, d.cli[1].cab, 'E-mail', 'F') });
+  });
+  const B = {
+    total: pessoas.length,
+    pf: pessoas.filter(x => x.tipo === 'PF').length,
+    pj: pessoas.filter(x => x.tipo === 'PJ').length,
+    kommoOrfaos: d.cli[2].linhas.filter(l => campo(l, d.cli[2].cab, 'Lead título', 'A') || campo(l, d.cli[2].cab, 'Celular (contato)', 'B')).length
+  };
+  const docs = {};
+  pessoas.forEach(p => { const k = soDig(p.doc); if (k) docs[k] = (docs[k] || 0) + 1; });
+  B.duplicados = Object.values(docs).filter(v => v > 1).length;
+  B.docInvalido = pessoas.filter(p => { const k = soDig(p.doc); return k.length !== 11 && k.length !== 14; }).length;
+  R.clientes = B;
+
+  return R;
+}
+
+
+/* =========================================================================
+   MOTOR DE ALERTAS
+   Cada alerta traz: severidade, área, impacto em R$ (quando mensurável),
+   diagnóstico (o que os dados dizem), causa provável, proposta de solução
+   em passos, dono sugerido, prazo e o indicador que comprova a correção.
+   ========================================================================= */
+const PESO_SEV = { critico: 0, alto: 1, medio: 2 };
+
+function montarAlertas(R) {
+  const A = R.alvaras, C = R.crm, T = R.controladoria, D = R.diligencias, E = R.execucoes, B = R.clientes;
+  const al = [];
+  const add = a => al.push(a);
+
+  /* ---------- COMPROMISSO COM O CLIENTE ---------- */
+  if (T.taxaPrazo !== null && T.taxaPrazo < 80) {
+    add({
+      sev: T.taxaPrazo < 60 ? 'critico' : 'alto', area: 'Operacional',
+      titulo: 'Maioria das petições iniciais sai fora do prazo prometido',
+      metrica: pct1(T.taxaPrazo) + ' no prazo', impacto: null,
+      resumo: 'Só ' + pct1(T.taxaPrazo) + ' das iniciais avaliadas foram protocoladas dentro da data máxima acordada — ' +
+        num(T.iniFora) + ' de ' + num(T.iniDentro + T.iniFora) + ' saíram atrasadas.',
+      diagnostico: 'O prazo de protocolo é o primeiro compromisso concreto que o escritório assume na assinatura do contrato. ' +
+        'Com ' + pct1(100 - T.taxaPrazo) + ' de descumprimento' +
+        (T.atrasoMedio !== null ? ' e atraso médio de <b>' + T.atrasoMedio.toFixed(1).replace('.', ',') + ' dias</b>' : '') +
+        ', isso deixou de ser exceção e virou o padrão da operação.',
+      causa: 'Quando o descumprimento é sistemático, raramente é falta de capacidade pontual: ou o prazo prometido na venda é menor que a capacidade real de produção, ou não há fila priorizada e cada advogado escolhe o que fazer primeiro.',
+      solucao: [
+        'Medir a capacidade real: quantas iniciais o time entrega por semana hoje, sem hora extra.',
+        'Alinhar o prazo do contrato a essa capacidade — se o ciclo real é de X dias, prometer X mais folga, nunca menos.',
+        'Criar fila única priorizada por data máxima de protocolo, visível para todos, com dono nominal por caso.',
+        'Bloquear o aceite de novos casos acima da capacidade semanal, ou contratar antes de vender.'
+      ],
+      indicador: 'Percentual de iniciais protocoladas no prazo — meta de 90% em 60 dias.',
+      dono: 'Coordenação do Processual', prazo: 'Esta semana',
+      fonte: 'Controladoria Jurídica › INICIAIS'
+    });
+  }
+
+  if (T.iniVencidas > 0) {
+    add({
+      sev: 'critico', area: 'Risco',
+      titulo: 'Iniciais com prazo vencido e ainda sem protocolo',
+      metrica: num(T.iniVencidas) + ' casos', impacto: null,
+      resumo: num(T.iniVencidas) + ' inicial(is) passaram da data máxima de protocolo e continuam sem processo distribuído' +
+        (T.piorAtraso ? ', a mais antiga há <b>' + T.piorAtraso + ' dias</b>' : '') + '.',
+      diagnostico: 'Diferente do atraso já consumado, estes casos <b>continuam correndo</b>: o dano cresce a cada dia e o cliente ainda não tem processo.',
+      causa: 'Caso sem dono nominal. Some da fila de todo mundo porque não está na fila de ninguém.',
+      solucao: [
+        'Listar os ' + num(T.iniVencidas) + ' casos hoje e atribuir um responsável nominal a cada um.',
+        'Verificar se algum envolve matéria com prazo prescricional ou decadencial — esses viram prioridade absoluta.',
+        'Comunicar proativamente o cliente antes que ele cobre: silêncio aqui vira reclamação e pedido de rescisão.',
+        'Definir regra permanente: inicial que passa da data máxima gera alerta automático para a coordenação.'
+      ],
+      indicador: 'Iniciais vencidas sem protocolo — meta de zero em 15 dias.',
+      dono: 'CEO + Coordenação do Processual', prazo: 'Hoje',
+      fonte: 'Controladoria Jurídica › INICIAIS'
+    });
+  }
+
+  if (T.audSemCiencia > 0) {
+    add({
+      sev: 'critico', area: 'Risco',
+      titulo: 'Audiências marcadas sem confirmação de ciência do cliente',
+      metrica: num(T.audSemCiencia) + ' audiências', impacto: null,
+      resumo: num(T.audSemCiencia) + ' audiência(s) futura(s) sem confirmação de que o cliente foi avisado' +
+        (T.audSemAviso ? ', sendo ' + num(T.audSemAviso) + ' sem nenhum dos três avisos registrados' : '') + '.',
+      diagnostico: 'Ausência do cliente em audiência pode gerar <b>confissão ficta</b>, arquivamento do processo ou perda da própria pretensão. ' +
+        'É o risco de maior severidade do escritório: o dano é irreversível e recai sobre o cliente.',
+      causa: 'A régua de avisos (1 mês, 1 semana e semana da audiência) existe na planilha mas não é executada — depende de alguém lembrar.',
+      solucao: [
+        'Confirmar hoje, por telefone, os ' + num(T.audSemCiencia) + ' clientes sem ciência registrada.' +
+          (T.aud7 ? ' <b>' + num(T.aud7) + '</b> têm audiência dentro de 7 dias — comece por eles.' : ''),
+        'Registrar a confirmação na planilha no mesmo momento da ligação, não depois.',
+        'Automatizar a régua: alerta nas três datas, com confirmação obrigatória antes de encerrar a tarefa.',
+        'Instituir checagem semanal das audiências dos próximos 30 dias na reunião de coordenação.'
+      ],
+      indicador: 'Audiências futuras sem ciência confirmada — meta de zero, permanentemente.',
+      dono: 'Controladoria Jurídica', prazo: 'Hoje',
+      fonte: 'Controladoria Jurídica › AUDIÊNCIAS'
+    });
+  }
+
+  /* ---------- COMERCIAL ---------- */
+  if (C.viavelSemAgenda > 0) {
+    add({
+      sev: C.viavelSemAgenda > C.viaveis * 0.15 ? 'critico' : 'alto', area: 'Comercial',
+      titulo: 'Análises viáveis que nunca viraram atendimento',
+      metrica: num(C.viavelSemAgenda) + ' leads',
+      impacto: C.valorViavelSemAgenda > 0 ? C.valorViavelSemAgenda : null,
+      impactoTipo: 'potencial',
+      resumo: num(C.viavelSemAgenda) + ' leads receberam parecer ou diagnóstico <b>viável</b> e não têm atendimento agendado — ' +
+        pct1(C.viaveis ? C.viavelSemAgenda / C.viaveis * 100 : null) + ' de tudo que foi aprovado tecnicamente.',
+      diagnostico: 'É o vazamento mais caro do funil: o escritório já <b>pagou o custo técnico</b> da análise, confirmou que o caso tem mérito, e o lead nunca chegou à mesa de negociação. ' +
+        (C.valorViavelSemAgenda > 0 ? 'Aplicando o ticket médio e a taxa de conversão atuais, isso equivale a cerca de <b>' + moeda(C.valorViavelSemAgenda) + '</b> em honorários iniciais deixados na mesa.' : ''),
+      causa: 'Não há responsável por transformar parecer viável em agendamento. A análise é entregue, marcada como pronta, e o processo termina aí.',
+      solucao: [
+        'Criar a regra: <b>todo parecer viável nasce com uma tarefa de agendamento</b> atribuída a um SDR, com prazo de 48h.',
+        'Puxar hoje a lista dos ' + num(C.viavelSemAgenda) + ' viáveis sem agenda e distribuir entre o time — é a campanha de maior retorno disponível, sem custo de mídia.',
+        'Medir por SDR a taxa "viável para agendado" e cobrar esse número, não só o volume de análises.',
+        'Encurtar o intervalo entre a entrega da análise e o contato: quanto mais perto, maior a conversão.'
+      ],
+      indicador: 'Taxa "viável para agendado" — meta de 85% em 30 dias.',
+      dono: 'Coordenação Comercial', prazo: 'Esta semana',
+      fonte: 'CRM › Diagnósticos e Pareceres'
+    });
+  }
+
+  if (C.semDesfecho > 0) {
+    const pctSD = C.realizados ? C.semDesfecho / C.realizados * 100 : 0;
+    add({
+      sev: pctSD > 40 ? 'alto' : 'medio', area: 'Comercial',
+      titulo: 'Atendimentos realizados sem desfecho registrado',
+      metrica: num(C.semDesfecho) + ' atendimentos', impacto: null,
+      resumo: num(C.semDesfecho) + ' atendimentos (' + pct1(pctSD) + ' dos realizados) não têm "Cliente Ganho" nem "Lead Perdido" preenchido.',
+      diagnostico: 'Sem desfecho, o win rate real é desconhecido — os ' + pct1(C.winRate) + ' que o painel mostra consideram apenas os decididos. ' +
+        'Pior: leads que ainda estavam em negociação somem do radar sem que ninguém perceba.',
+      causa: 'O campo é preenchido só quando há conclusão clara. Negociação que se arrasta fica em aberto para sempre.',
+      solucao: [
+        'Definir prazo máximo de negociação: 30 dias sem resposta encerra como Lead Perdido, com motivo registrado.',
+        'Tornar o desfecho obrigatório no fechamento do atendimento.',
+        'Revisar em bloco os ' + num(C.semDesfecho) + ' atendimentos abertos — parte ainda é recuperável.',
+        'Acompanhar semanalmente quantos passam de 30 dias sem desfecho.'
+      ],
+      indicador: 'Atendimentos sem desfecho após 30 dias — meta abaixo de 5%.',
+      dono: 'Coordenação Comercial', prazo: 'Próximos 15 dias',
+      fonte: 'CRM › Fluxo de Atendimentos'
+    });
+  }
+
+  if (C.taxaNoShow !== null && C.taxaNoShow > 10) {
+    add({
+      sev: C.taxaNoShow > 20 ? 'alto' : 'medio', area: 'Comercial',
+      titulo: 'No-show acima do aceitável',
+      metrica: pct1(C.taxaNoShow), impacto: null,
+      resumo: pct1(C.taxaNoShow) + ' dos atendimentos agendados não tiveram comparecimento (' + num(C.noShow) + ' casos).',
+      diagnostico: 'Cada no-show consome uma hora de agenda de closer sem qualquer chance de receita — e desloca outro lead que poderia ter sido atendido no lugar.',
+      causa: 'Ausência de confirmação ativa entre o agendamento e o atendimento. Quanto maior o intervalo, maior a evasão.',
+      solucao: [
+        'Confirmação ativa na véspera mais lembrete na manhã do atendimento — o WhatsApp já é o canal preferido dos leads.',
+        'Encurtar o intervalo entre agendamento e atendimento, idealmente para até 3 dias.',
+        'Oferecer reagendamento imediato no primeiro no-show, antes de descartar o lead.',
+        'Medir no-show por closer e por origem: normalmente se concentra em uma faixa específica.'
+      ],
+      indicador: 'Taxa de no-show — meta abaixo de 8% em 60 dias.',
+      dono: 'Coordenação Comercial', prazo: 'Próximos 15 dias',
+      fonte: 'CRM › Fluxo de Atendimentos'
+    });
+  }
+
+  /* ---------- FINANCEIRO ---------- */
+  if (A.pendBMValor > 0) {
+    add({
+      sev: 'alto', area: 'Financeiro',
+      titulo: 'Honorários reconhecidos que não entraram no caixa',
+      metrica: moeda(A.pendBMValor), impacto: A.pendBMValor,
+      resumo: moeda(A.pendBMValor) + ' em ' + num(A.pendBMQtd) + ' alvará(s) já creditados em conta, mas sem o repasse ao escritório registrado como pago.',
+      diagnostico: 'É receita já ganha e liberada judicialmente que ainda não chegou ao caixa do escritório — ou não foi baixada na planilha. Nos dois casos, o resultado financeiro está errado.',
+      causa: 'O repasse depende de conferência manual, sem prazo definido nem responsável fixo.',
+      solucao: [
+        'Conciliar os ' + num(A.pendBMQtd) + ' casos com o extrato bancário, separando atraso real de falta de baixa.',
+        'Definir rotina semanal de conciliação alvará contra extrato contra planilha.',
+        'Estabelecer prazo interno: crédito em conta gera repasse ao BM em até 5 dias úteis.',
+        'Nomear um responsável único pela baixa, com o financeiro conferindo.'
+      ],
+      indicador: 'Honorários pendentes de repasse — meta abaixo de 10% do creditado no mês.',
+      dono: 'Financeiro', prazo: 'Próximos 7 dias',
+      fonte: 'Alvarás e Acordos'
+    });
+  }
+
+  if (A.pendCliValor > 0) {
+    add({
+      sev: 'critico', area: 'Risco',
+      titulo: 'Valores de clientes retidos sem repasse',
+      metrica: moeda(A.pendCliValor), impacto: A.pendCliValor,
+      resumo: moeda(A.pendCliValor) + ' devidos a ' + num(A.pendCliQtd) + ' cliente(s) ainda sem repasse registrado.',
+      diagnostico: 'Dinheiro de terceiro retido além do razoável é <b>risco ético e disciplinar</b>, não apenas reputacional. ' +
+        (A.prazoRepasse !== null ? 'O prazo médio de repasse hoje é de <b>' + A.prazoRepasse.toFixed(1).replace('.', ',') + ' dias</b>; a referência de mercado é liquidar em até 5 dias úteis.' : ''),
+      causa: 'Repasse tratado como tarefa administrativa de baixa prioridade, sem prazo formal.',
+      solucao: [
+        'Liquidar os ' + num(A.pendCliQtd) + ' repasses pendentes esta semana, começando pelos mais antigos.',
+        'Instituir prazo formal de 5 dias úteis entre crédito em conta e repasse ao cliente.',
+        'Avisar o cliente no momento do crédito informando a data do repasse — antecipa a expectativa e evita cobrança.',
+        'Usar o momento do repasse para pedir avaliação e indicação: é o pico de satisfação do cliente e hoje está desperdiçado.'
+      ],
+      indicador: 'Prazo médio de repasse ao cliente — meta de até 5 dias úteis.',
+      dono: 'Financeiro + CEO', prazo: 'Esta semana',
+      fonte: 'Alvarás e Acordos'
+    });
+  }
+
+  if (A.semRateioQtd > 0) {
+    add({
+      sev: 'alto', area: 'Financeiro',
+      titulo: 'Alvarás creditados sem destino do dinheiro informado',
+      metrica: moeda(A.semRateioValor), impacto: null,
+      resumo: num(A.semRateioQtd) + ' alvarás somando ' + moeda(A.semRateioValor) + ' têm valor creditado mas nenhum valor de honorários, parceiro ou cliente preenchido.',
+      diagnostico: 'Enquanto essas linhas não forem completadas, o <b>take rate do escritório fica subavaliado</b> e não se sabe quanto daquele dinheiro era receita. O take rate aparente hoje é de ' + pct1(A.takeRate) + '.',
+      causa: 'Lançamentos antigos migrados sem o detalhamento, ou conferência que ficou pela metade.',
+      solucao: [
+        'Conciliar os ' + num(A.semRateioQtd) + ' alvarás com o contrato de cada cliente para reconstruir o rateio.',
+        'Priorizar os de maior valor — poucos casos respondem pela maior parte do montante.',
+        'Tornar o rateio obrigatório no lançamento: sem honorários, parceiro ou cliente, a linha fica sinalizada.',
+        'Recalcular o take rate depois da conciliação: é ele que orienta a política de preço.'
+      ],
+      indicador: 'Alvarás sem rateio — meta de zero, com take rate real conhecido.',
+      dono: 'Financeiro', prazo: 'Próximos 30 dias',
+      fonte: 'Alvarás e Acordos'
+    });
+  }
+
+  if (A.foraFluxoQtd > 0) {
+    add({
+      sev: 'medio', area: 'Financeiro',
+      titulo: 'Receita fora do fluxo de honorários',
+      metrica: moeda(A.foraFluxoValor), impacto: null,
+      resumo: num(A.foraFluxoQtd) + ' alvará(s) com honorários de ' + moeda(A.foraFluxoValor) + ' não marcados como lançados no fluxo de honorários.',
+      diagnostico: 'Sem esse lançamento o resultado do escritório fica <b>subavaliado</b>: a receita existe, foi recebida, mas não aparece no DRE.',
+      causa: 'Dois controles paralelos (alvarás e fluxo de honorários) sem integração nem conferência cruzada.',
+      solucao: [
+        'Lançar os ' + num(A.foraFluxoQtd) + ' casos no fluxo de honorários.',
+        'Criar conferência mensal: total de honorários dos alvarás contra total lançado no fluxo. A diferença tem de ser zero.',
+        'Avaliar unificar as duas planilhas — controle duplicado sempre diverge.'
+      ],
+      indicador: 'Diferença entre honorários de alvarás e fluxo de honorários — meta de zero no fechamento.',
+      dono: 'Financeiro', prazo: 'Próximos 30 dias',
+      fonte: 'Alvarás e Acordos'
+    });
+  }
+
+  /* ---------- OPERACIONAL ---------- */
+  if (D.taxaCumprimento !== null && D.taxaCumprimento < 30 && D.total > 10) {
+    add({
+      sev: 'critico', area: 'Operacional',
+      titulo: 'Diligências praticamente não são concluídas',
+      metrica: pct1(D.taxaCumprimento) + ' cumpridas', impacto: null,
+      resumo: 'Apenas ' + num(D.cumpridas) + ' de ' + num(D.total) + ' diligências (' + pct1(D.taxaCumprimento) + ') estão marcadas como cumpridas; ' +
+        num(D.abertas) + ' seguem em aberto' + (D.idadeMedia !== null ? ', com idade média de ' + D.idadeMedia.toFixed(1).replace('.', ',') + ' dias' : '') + '.',
+      diagnostico: 'Ou o retorno do Judiciário está represado, ou o cumprimento não vem sendo baixado na planilha. ' +
+        'Nos dois casos a liderança está sem visibilidade real — e o time repete cobranças que talvez já tenham sido atendidas.',
+      causa: 'Não há momento definido para baixar o cumprimento, nem revisão periódica da fila.',
+      solucao: [
+        'Fazer uma varredura para separar quanto é atraso real do juízo e quanto é falta de baixa na planilha.',
+        'Instituir revisão semanal da fila, com baixa obrigatória do que foi concluído.',
+        'Definir prazo padrão por tipo de diligência e escalonar o que passar dele.',
+        'Fechar o ciclo: diligência só sai da fila com data de cumprimento e resultado registrados.'
+      ],
+      indicador: 'Taxa de cumprimento de diligências — meta de 60% em 60 dias.',
+      dono: 'Coordenação do Processual', prazo: 'Esta semana',
+      fonte: 'Diligências'
+    });
+  }
+
+  if (D.semContato > 0 && D.total > 0 && D.semContato / D.total > 0.4) {
+    add({
+      sev: 'alto', area: 'Operacional',
+      titulo: 'Diligências lançadas sem nenhuma tentativa de contato',
+      metrica: num(D.semContato) + ' de ' + num(D.total), impacto: null,
+      resumo: num(D.semContato) + ' diligências (' + pct1(D.semContato / D.total * 100) + ') não têm e-mail enviado, servidor atendido nem histórico de contato registrado.',
+      diagnostico: '<b>Lançar na planilha não é diligenciar.</b> Sem registro de tentativa não há como cobrar retorno do cartório nem comprovar diligência ao cliente se ele questionar.',
+      causa: 'A planilha é usada como lista de intenção, não como registro de execução.',
+      solucao: [
+        'Definir que toda diligência exige ao menos uma tentativa registrada em até 48h do lançamento.',
+        'Padronizar os canais por vara (e-mail, balcão virtual, presencial) — parte já está mapeada na planilha.',
+        'Usar o campo de histórico como registro obrigatório, com data e resultado.',
+        'Revisar semanalmente as diligências sem contato: são as que nunca saem sozinhas.'
+      ],
+      indicador: 'Diligências com contato registrado — meta de 90% em 30 dias.',
+      dono: 'Coordenação do Processual', prazo: 'Próximos 15 dias',
+      fonte: 'Diligências'
+    });
+  }
+
+  if (D.concentracaoPessoa && D.concentracaoPessoa.pct > 60) {
+    add({
+      sev: 'medio', area: 'Risco',
+      titulo: 'Operação de diligências concentrada em uma única pessoa',
+      metrica: pct1(D.concentracaoPessoa.pct), impacto: null,
+      resumo: '<b>' + esc(D.concentracaoPessoa.nome) + '</b> responde por ' + pct1(D.concentracaoPessoa.pct) +
+        ' de todas as diligências (' + num(D.concentracaoPessoa.qtd) + ' de ' + num(D.total) + ').',
+      diagnostico: 'Risco operacional puro: férias, afastamento ou desligamento dessa pessoa param a frente inteira. ' +
+        'Também significa que não há redundância do conhecimento sobre os canais de cada vara.',
+      causa: 'Crescimento da operação sem redistribuição de carga nem formação de substituto.',
+      solucao: [
+        'Distribuir a carga por comarca ou por tipo de diligência entre pelo menos duas pessoas.',
+        'Documentar canais e contatos de cada vara em local compartilhado — hoje o conhecimento é pessoal.',
+        'Formar um substituto capaz de assumir a frente sem perda de ritmo.',
+        'Reavaliar em 60 dias se a distribuição se manteve.'
+      ],
+      indicador: 'Participação do maior executor — meta abaixo de 50%.',
+      dono: 'CEO', prazo: 'Próximos 30 dias',
+      fonte: 'Diligências'
+    });
+  }
+
+  if (D.valAbertas > 0) {
+    add({
+      sev: 'alto', area: 'Financeiro',
+      titulo: 'Solicitações de valores a receber ainda pendentes',
+      metrica: num(D.valAbertas) + ' em aberto', impacto: null,
+      resumo: num(D.valAbertas) + ' de ' + num(D.valoresReceber.length) + ' solicitações da fila de valores a receber seguem sem confirmação de liberação.',
+      diagnostico: 'É a fila com <b>efeito mais direto no caixa</b>: cada item aqui é alvará ou pagamento que já poderia ter sido creditado.',
+      causa: 'Falta de acompanhamento sistemático junto ao juízo depois do pedido inicial.',
+      solucao: [
+        'Priorizar esta fila acima das demais diligências — é a única que converte diretamente em dinheiro.',
+        'Definir cadência de cobrança: novo contato a cada 7 dias enquanto não houver resposta.',
+        'Escalonar ao juiz ou à corregedoria o que passar de 30 dias sem movimentação.'
+      ],
+      indicador: 'Solicitações em aberto há mais de 30 dias — meta de zero.',
+      dono: 'Coordenação do Processual', prazo: 'Esta semana',
+      fonte: 'Diligências › Valores a Receber'
+    });
+  }
+
+  /* ---------- EXECUÇÕES ---------- */
+  if (E.vencidos > 0) {
+    add({
+      sev: 'alto', area: 'Operacional',
+      titulo: 'Prazos vencidos nas execuções de sentença',
+      metrica: num(E.vencidos) + ' processos', impacto: null,
+      resumo: num(E.vencidos) + ' processo(s) em execução com prazo alvo já ultrapassado' +
+        (E.aVencer7 ? ' e ' + num(E.aVencer7) + ' vencendo nos próximos 7 dias' : '') + '.',
+      diagnostico: 'Execução parada é <b>capital parado</b>: são valores já reconhecidos judicialmente que não avançam para o caixa.',
+      causa: 'Falta de rotina fixa de varredura dos prazos alvo por aba.',
+      solucao: [
+        'Rodar a agenda de vencimentos do painel de Execuções e atacar o vencido, do mais antigo ao mais recente.',
+        'Definir revisão semanal fixa dos prazos alvo.',
+        'Registrar a próxima data alvo sempre que uma diligência for concluída — senão o processo some do radar.'
+      ],
+      indicador: 'Processos com prazo alvo vencido — meta de zero na revisão semanal.',
+      dono: 'Coordenação do Processual', prazo: 'Esta semana',
+      fonte: 'Execuções de Sentença'
+    });
+  }
+
+  if (E.itivVencidos > 0) {
+    add({
+      sev: 'alto', area: 'Financeiro',
+      titulo: 'Pagamentos vencidos pelo réu no ITIV e Recuperação Judicial',
+      metrica: num(E.itivVencidos) + ' processos',
+      impacto: E.porAba.itivRecJ ? E.porAba.itivRecJ.valor : null,
+      resumo: num(E.itivVencidos) + ' processo(s) com prazo fatal de pagamento marcado como VENCIDO — o réu não pagou no prazo' +
+        (E.porAba.itivRecJ ? ', em uma carteira de ' + moeda(E.porAba.itivRecJ.valor) : '') + '.',
+      diagnostico: 'Aqui o escritório já venceu a disputa: o que falta é <b>execução forçada</b>. Cada mês de inércia é um mês de dinheiro não recebido.',
+      causa: 'Devedor público e empresas em recuperação exigem rito próprio, diferente do cliente privado comum.',
+      solucao: [
+        'Separar por tipo de devedor: ente público segue precatório ou RPV; recuperação judicial exige habilitação no quadro de credores.',
+        'Para o município, verificar a fila de RPV e a data prevista — dá para projetar o recebimento.',
+        'Para recuperação judicial, confirmar se o crédito está habilitado e acompanhar o plano.',
+        'Definir expectativa realista por grupo e comunicar ao cliente — evita cobrança improdutiva.'
+      ],
+      indicador: 'Valor recuperado por trimestre nessa carteira.',
+      dono: 'Coordenação do Processual', prazo: 'Próximos 30 dias',
+      fonte: 'Execuções › ITIV/Rec J.'
+    });
+  }
+
+  /* ---------- CARTEIRA E RISCO ---------- */
+  const reus = Object.entries(E.reus).sort((a, b) => b[1] - a[1]);
+  if (reus.length && E.total > 0 && (reus[0][1] / E.total * 100) > 20) {
+    const pctTop = reus[0][1] / E.total * 100;
+    add({
+      sev: 'medio', area: 'Risco',
+      titulo: 'Concentração de valor em uma única contraparte',
+      metrica: pct1(pctTop), impacto: reus[0][1],
+      resumo: '<b>' + esc(reus[0][0]) + '</b> responde por ' + moeda(reus[0][1]) + ' (' + pct1(pctTop) + ') de todo o valor em execução.',
+      diagnostico: 'Dependência alta de uma contraparte é <b>risco de tese</b>: mudança de jurisprudência ou de política daquele devedor atinge boa parte da carteira ao mesmo tempo.',
+      causa: 'Originação concentrada em um tipo de caso que tem sempre o mesmo réu.',
+      solucao: [
+        'Mapear a exposição total a essa contraparte, incluindo casos ainda em fase de conhecimento.',
+        'Acompanhar de perto mudanças de entendimento nos tribunais sobre essa tese.',
+        'Diversificar a originação: metas comerciais por produto, não só volume total.',
+        'Ter plano alternativo caso a tese sofra reviravolta.'
+      ],
+      indicador: 'Participação da maior contraparte no valor em execução — meta abaixo de 20%.',
+      dono: 'CEO', prazo: 'Próximos 90 dias',
+      fonte: 'Execuções de Sentença'
+    });
+  }
+
+  if (B.kommoOrfaos > 0) {
+    add({
+      sev: 'medio', area: 'Comercial',
+      titulo: 'Contatos do CRM fora da base de clientes',
+      metrica: num(B.kommoOrfaos) + ' contatos', impacto: null,
+      resumo: num(B.kommoOrfaos) + ' contatos do Kommo sem identificação — equivalente a ' +
+        pct1(B.total ? B.kommoOrfaos / (B.total + B.kommoOrfaos) * 100 : null) + ' de tudo que o escritório tem cadastrado.',
+      diagnostico: 'Base morta: enquanto não forem identificados, esses contatos não entram em campanha segmentada nem em ação de recompra. É audiência já conquistada e não aproveitada.',
+      causa: 'Importação de leads sem exigir identificação mínima, e sem rotina de enriquecimento.',
+      solucao: [
+        'Cruzar por telefone com a base de clientes — parte já é cliente e só falta identificar (o painel de Base de Clientes faz esse cruzamento).',
+        'Para os realmente novos, campanha simples de identificação antes de qualquer oferta.',
+        'Descartar formalmente os telefones inválidos: manter lixo na base distorce toda métrica de marketing.',
+        'Exigir nome e telefone válido na entrada de qualquer novo lead.'
+      ],
+      indicador: 'Contatos sem identificação — meta de redução de 50% em 90 dias.',
+      dono: 'Coordenação Comercial', prazo: 'Próximos 30 dias',
+      fonte: 'Base de Clientes › Kommo'
+    });
+  }
+
+  if (T.onbSemRegistro > 0 || T.onbNaoRealizada > 0) {
+    add({
+      sev: 'medio', area: 'Operacional',
+      titulo: 'Onboarding do cliente sem controle',
+      metrica: num(T.onbSemRegistro + T.onbNaoRealizada) + ' clientes', impacto: null,
+      resumo: num(T.onbSemRegistro) + ' cliente(s) sem nenhum registro de onboarding e ' + num(T.onbNaoRealizada) + ' com onboarding agendada que não aconteceu.',
+      diagnostico: 'A onboarding é o que <b>alinha expectativa</b> logo depois da venda. Sem ela, o cliente descobre prazo e rito no meio do processo — e é aí que nasce a reclamação.',
+      causa: 'Etapa tratada como opcional, sem dono nem prazo.',
+      solucao: [
+        'Tornar a onboarding obrigatória: contrato assinado gera automaticamente a tarefa, com prazo de contato definido.',
+        'Reagendar rapidamente as que não aconteceram — deixar passar transforma cliente novo em cliente sem vínculo.',
+        'Usar roteiro padrão: o que vai acontecer, em quanto tempo, o que o cliente precisa fornecer e como falar com o escritório.',
+        'Medir mensalmente a cobertura de onboarding sobre os contratos fechados.'
+      ],
+      indicador: 'Cobertura de onboarding sobre contratos fechados — meta de 95%.',
+      dono: 'Controladoria Jurídica', prazo: 'Próximos 30 dias',
+      fonte: 'Controladoria Jurídica › ONBOARDING'
+    });
+  }
+
+  if (E.diligenciar > 0) {
+    add({
+      sev: 'medio', area: 'Operacional',
+      titulo: 'Processos em execução marcados para diligência imediata',
+      metrica: num(E.diligenciar) + ' processos', impacto: null,
+      resumo: num(E.diligenciar) + ' processo(s) das abas de execução estão marcados com "Diligenciar: Sim".',
+      diagnostico: 'É uma fila de trabalho que o próprio time sinalizou como necessária e que continua aberta.',
+      causa: 'A marcação é feita na verificação, mas não gera tarefa com dono e prazo.',
+      solucao: [
+        'Transformar cada marcação em tarefa atribuída, com prazo.',
+        'Limpar a marcação assim que a diligência for feita — senão a fila perde o sentido.',
+        'Revisar a fila na reunião semanal do Processual.'
+      ],
+      indicador: 'Processos marcados para diligenciar há mais de 15 dias — meta de zero.',
+      dono: 'Coordenação do Processual', prazo: 'Próximos 15 dias',
+      fonte: 'Execuções de Sentença'
+    });
+  }
+
+  al.sort((a, b) => (PESO_SEV[a.sev] - PESO_SEV[b.sev]) || ((b.impacto || 0) - (a.impacto || 0)));
+  al.forEach((a, i) => { a.id = i; });
+  return al;
+}
+
+
+/* =========================================================================
+   RENDERIZAÇÃO
+   ========================================================================= */
+const ROTULO_SEV = { critico: 'Crítico', alto: 'Alto', medio: 'Médio' };
+const CLASSE_SEV = { critico: 'vermelho', alto: 'amarelo', medio: 'neutro' };
+
+/* ---------- Termômetro por área ---------- */
+function notaArea(itens) {
+  // 100 menos as penalidades por severidade; piso em zero
+  let n = 100;
+  itens.forEach(a => { n -= a.sev === 'critico' ? 30 : a.sev === 'alto' ? 15 : 6; });
+  return Math.max(0, n);
+}
+function corNota(n) { return n >= 80 ? COR_VERDE : n >= 55 ? COR_AMARELO : COR_VERMELHO; }
+function rotuloNota(n) { return n >= 80 ? 'Sob controle' : n >= 55 ? 'Requer atenção' : 'Exige ação'; }
+
+function renderTermometro(R, alertas) {
+  const AREAS = ['Comercial', 'Operacional', 'Financeiro', 'Risco'];
+  const criticos = alertas.filter(a => a.sev === 'critico').length;
+  document.getElementById('subTermometro').innerHTML =
+    'Leitura consolidada de seis planilhas · posição de <b>' + R.hoje.toLocaleDateString('pt-BR') + '</b> · ' +
+    '<b>' + alertas.length + '</b> alertas ativos' + (criticos ? ', <b>' + criticos + '</b> crítico(s)' : '') + '.';
+
+  document.getElementById('termometro').innerHTML = AREAS.map(area => {
+    const itens = alertas.filter(a => a.area === area);
+    const n = notaArea(itens);
+    const cor = corNota(n);
+    const cri = itens.filter(a => a.sev === 'critico').length;
+    return '<div class="termo-card" style="border-top-color:' + cor + '">' +
+      '<div class="termo-area">' + area + '</div>' +
+      '<div class="termo-nota" style="color:' + cor + '">' + n + '<span>/100</span></div>' +
+      '<div class="termo-status" style="color:' + cor + '">' + rotuloNota(n) + '</div>' +
+      '<div class="termo-detalhe">' + (itens.length
+        ? itens.length + ' alerta(s)' + (cri ? ' · <b style="color:var(--vermelho)">' + cri + ' crítico(s)</b>' : '')
+        : 'nenhum alerta') + '</div></div>';
+  }).join('');
+}
+
+/* ---------- Métricas de comando ---------- */
+function renderKPIs(R) {
+  const A = R.alvaras, C = R.crm, T = R.controladoria, E = R.execucoes, D = R.diligencias;
+  const capitalParado = A.pendBMValor + A.pendCliValor;
+
+  document.getElementById('kpis').innerHTML = [
+    cartaoKPI('Honorários — Últimos 12 Meses', moeda(A.receita12), 'verde',
+      '<span>receita do escritório efetivamente creditada</span>'),
+    cartaoKPI('Valor em Execução', moeda(E.total), 'azul',
+      '<span><b>' + num(E.processos) + '</b> processos em acompanhamento</span>'),
+    cartaoKPI('Take Rate', pct1(A.takeRate),
+      A.takeRate >= 25 ? 'verde' : A.takeRate >= 15 ? 'amarelo' : 'vermelho',
+      '<span>de cada R$ 100 creditados, quanto fica no escritório</span>'),
+    cartaoKPI('Capital Parado', moeda(capitalParado), capitalParado > 0 ? 'vermelho' : 'verde',
+      '<span>repasses reconhecidos e ainda não liquidados</span>'),
+    cartaoKPI('Win Rate', pct1(C.winRate),
+      C.winRate >= 30 ? 'verde' : C.winRate >= 20 ? 'amarelo' : 'vermelho',
+      '<span><b>' + num(C.ganhos) + '</b> contratos de <b>' + num(C.ganhos + C.perdidos) + '</b> decididos</span>'),
+    cartaoKPI('Protocolo no Prazo', pct1(T.taxaPrazo),
+      T.taxaPrazo >= 90 ? 'verde' : T.taxaPrazo >= 70 ? 'amarelo' : 'vermelho',
+      '<span>o compromisso que o cliente ouve na assinatura</span>'),
+    cartaoKPI('Ticket Médio de Entrada', C.ticket === null ? '—' : moeda(C.ticket), 'roxo',
+      '<span>honorários iniciais por contrato fechado</span>'),
+    cartaoKPI('Backlog Operacional', num(D.abertas + E.vencidos),
+      (D.abertas + E.vencidos) > 50 ? 'vermelho' : 'amarelo',
+      '<span>diligências abertas e prazos de execução vencidos</span>')
+  ].join('');
+}
+
+/* ---------- Capital parado ---------- */
+function renderCapital(R) {
+  const A = R.alvaras, E = R.execucoes, D = R.diligencias;
+  const filas = [
+    { nome: 'Honorários a repassar ao BM', valor: A.pendBMValor, cor: COR_VERMELHO,
+      nota: num(A.pendBMQtd) + ' alvarás · receita fora do caixa' },
+    { nome: 'A repassar ao cliente', valor: A.pendCliValor, cor: COR_AMARELO,
+      nota: num(A.pendCliQtd) + ' clientes · risco ético' },
+    { nome: 'Aguardando pagamento', valor: E.porAba.aguardPgto ? E.porAba.aguardPgto.valor : 0, cor: COR_CIANO,
+      nota: (E.porAba.aguardPgto ? num(E.porAba.aguardPgto.qtd) : 0) + ' processos com condenação a pagar' },
+    { nome: 'ITIV / Recuperação Judicial', valor: E.porAba.itivRecJ ? E.porAba.itivRecJ.valor : 0, cor: COR_ROXO,
+      nota: (E.itivVencidos || 0) + ' com pagamento já vencido' },
+    { nome: 'Penhora a bloquear', valor: E.porAba.penhora ? E.porAba.penhora.valor : 0, cor: COR_AZUL,
+      nota: (E.porAba.penhora ? num(E.porAba.penhora.qtd) : 0) + ' processos' },
+    { nome: 'Alvarás pendentes', valor: E.porAba.alvaras ? E.porAba.alvaras.valor : 0, cor: '#84cc16',
+      nota: 'já deferidos, aguardando saque' }
+  ].filter(f => f.valor > 0).sort((a, b) => b.valor - a.valor);
+
+  const totalParado = filas.reduce((s, f) => s + f.valor, 0);
+  document.getElementById('resumoCapital').innerHTML = [
+    itemResumo('Total em filas', moeda(totalParado), 'capital reconhecido que ainda não é caixa', COR_AZUL),
+    itemResumo('Efeito imediato', moeda(A.pendBMValor + A.pendCliValor),
+      'depende só do escritório — não do Judiciário', COR_VERMELHO),
+    itemResumo('Depende do Judiciário', moeda(Math.max(0, totalParado - A.pendBMValor - A.pendCliValor)),
+      'exige diligência e tempo processual', COR_CIANO),
+    itemResumo('Fila de valores a receber', num(D.valAbertas),
+      'solicitações em aberto no cartório', D.valAbertas ? COR_AMARELO : COR_VERDE)
+  ].join('');
+
+  destruir('capital');
+  graficos.capital = new Chart(document.getElementById('grafCapital'), {
+    type: 'bar',
+    data: {
+      labels: filas.map(f => f.nome),
+      datasets: [{ label: 'Valor', data: filas.map(f => f.valor),
+        backgroundColor: filas.map(f => f.cor), borderRadius: 4, maxBarThickness: 34 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      scales: { x: { ticks: { callback: v => moedaCurta(v) }, grid: { color: COR_BORDA } }, y: { grid: { display: false } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: ctx => moeda(ctx.parsed.x),
+          afterLabel: ctx => filas[ctx.dataIndex].nota
+        } }
+      }
+    }
+  });
+}
+
+/* ---------- Alertas ---------- */
+function fichaAlerta(a) {
+  return {
+    titulo: esc(a.titulo),
+    sub: '<span class="tag-pct ' + CLASSE_SEV[a.sev] + '">' + ROTULO_SEV[a.sev] + '</span> · ' +
+         esc(a.area) + ' · fonte: ' + esc(a.fonte),
+    blocos: [
+      { titulo: 'O que os dados mostram', campos: [
+        { r: 'Indicador atual', v: a.metrica, classe: 'grande' },
+        a.impacto ? { r: a.impactoTipo === 'potencial' ? 'Receita potencial estimada' : 'Valor envolvido',
+          v: moeda(a.impacto), classe: 'grande' } : null,
+        { r: 'Situação', v: a.resumo, largo: true, classe: 'texto' }
+      ].filter(Boolean) },
+      { titulo: 'Diagnóstico', campos: [
+        { r: 'Por que isso importa', v: a.diagnostico, largo: true, classe: 'texto' },
+        { r: 'Causa provável', v: a.causa, largo: true, classe: 'texto' }
+      ]},
+      { titulo: 'Proposta de solução', campos: a.solucao.map((s, i) => ({
+        r: 'Passo ' + (i + 1), v: s, largo: true, classe: 'texto'
+      })) },
+      { titulo: 'Como acompanhar', campos: [
+        { r: 'Indicador de sucesso', v: a.indicador, largo: true, classe: 'texto' },
+        { r: 'Responsável sugerido', v: esc(a.dono) },
+        { r: 'Prazo', v: '<span class="tag-pct ' + (/hoje|semana/i.test(a.prazo) ? 'vermelho' : 'amarelo') + '">' + esc(a.prazo) + '</span>' }
+      ]}
+    ],
+    notas: [
+      a.sev === 'critico' ? { tipo: 'critico', html: 'Alerta <b>crítico</b>: risco de dano irreversível ao cliente, ao caixa ou à reputação do escritório. Trate antes dos demais.' } : null
+    ].filter(Boolean),
+    acoes: []
+  };
+}
+
+function alertasVisiveis() {
+  return BASE.alertas.filter(a =>
+    (FILTRO.sev === 'todos' || a.sev === FILTRO.sev) &&
+    (FILTRO.area === 'todas' || a.area === FILTRO.area) &&
+    casaBusca(FILTRO.termo, a.titulo, a.resumo, a.area, a.dono, a.fonte));
+}
+
+function renderAlertas() {
+  const vis = alertasVisiveis();
+  const el = document.getElementById('listaAlertas');
+  el.innerHTML = vis.length ? vis.map(a =>
+    '<div class="alerta ' + a.sev + '" data-id="' + a.id + '">' +
+      '<div class="alerta-topo">' +
+        '<span class="tag-pct ' + CLASSE_SEV[a.sev] + '">' + ROTULO_SEV[a.sev] + '</span>' +
+        '<span class="alerta-area">' + esc(a.area) + '</span>' +
+        '<span class="alerta-metrica">' + a.metrica + '</span>' +
+        (a.impacto ? '<span class="alerta-impacto' + (a.impactoTipo === 'potencial' ? ' potencial' : '') + '">' +
+          moeda(a.impacto) + (a.impactoTipo === 'potencial' ? ' potenciais' : ' em jogo') + '</span>' : '') +
+        '<span class="alerta-prazo">' + esc(a.prazo) + '</span>' +
+      '</div>' +
+      '<div class="alerta-titulo">' + esc(a.titulo) + '</div>' +
+      '<div class="alerta-resumo">' + a.resumo + '</div>' +
+      '<div class="alerta-rodape">' +
+        '<span>&#128100; ' + esc(a.dono) + '</span>' +
+        '<span class="alerta-abrir">ver diagnóstico e solução &rarr;</span>' +
+      '</div>' +
+    '</div>').join('') :
+    '<div class="obs-vazio">Nenhum alerta neste filtro.</div>';
+
+  el.querySelectorAll('.alerta').forEach(div => {
+    div.addEventListener('click', () => {
+      const a = BASE.alertas.find(x => x.id === Number(div.dataset.id));
+      if (a) abrirDetalhe(fichaAlerta(a));
+    });
+  });
+
+  const comValor = vis.filter(a => a.impacto);
+  const maior = comValor.sort((a, b) => b.impacto - a.impacto)[0];
+  document.getElementById('notaAlertas').innerHTML =
+    'Exibindo <b>' + vis.length + '</b> de <b>' + BASE.alertas.length + '</b> alertas' +
+    (maior ? ' · maior valor isolado: <b>' + moeda(maior.impacto) + '</b> (' + esc(maior.titulo) +
+      (maior.impactoTipo === 'potencial' ? ', receita potencial estimada' : '') + ')' : '') +
+    '. <span style="color:var(--texto-muted)">Os valores não são somáveis entre si — carteiras diferentes podem conter o mesmo processo.</span>';
+}
+
+/* ---------- Agenda do CEO ---------- */
+function renderAgenda() {
+  const urgentes = BASE.alertas
+    .filter(a => /hoje|esta semana/i.test(a.prazo))
+    .sort((a, b) => PESO_SEV[a.sev] - PESO_SEV[b.sev]);
+  const corpo = document.getElementById('corpoAgenda');
+  corpo.innerHTML = urgentes.length ? urgentes.map(a =>
+    '<tr data-id="' + a.id + '">' +
+    '<td><b>' + esc(a.titulo) + '</b><br><span style="color:var(--texto-muted);font-size:.75rem">' + esc(a.dono) + '</span></td>' +
+    '<td><span class="tag-pct neutro">' + esc(a.area) + '</span></td>' +
+    '<td>' + (a.impacto ? '<b>' + moeda(a.impacto) + '</b>' : a.metrica) + '</td>' +
+    '<td style="white-space:normal;max-width:320px">' + esc(a.diagnostico.replace(/<[^>]+>/g, '').slice(0, 130)) + '…</td>' +
+    '<td><span class="tag-pct ' + (/hoje/i.test(a.prazo) ? 'vermelho' : 'amarelo') + '">' + esc(a.prazo) + '</span></td></tr>'
+  ).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--texto-muted);padding:1.2rem">Nenhuma decisão urgente pendente.</td></tr>';
+  if (urgentes.length) tabelaClicavel('corpoAgenda', urgentes, fichaAlerta);
+}
+
+/* ---------- Vazamentos do funil ---------- */
+function renderVazamento(R) {
+  const C = R.crm, T = R.controladoria;
+  const etapas = [
+    { nome: 'Análises produzidas', v: C.total, base: null, leitura: 'Topo do funil técnico' },
+    { nome: 'Análises viáveis', v: C.viaveis, base: C.total, leitura: 'Casos com mérito confirmado' },
+    { nome: 'Atendimento agendado', v: C.viaveis - C.viavelSemAgenda, base: C.viaveis, leitura: 'Onde está o maior vazamento' },
+    { nome: 'Atendimento realizado', v: C.realizados, base: C.viaveis - C.viavelSemAgenda, leitura: 'Perda por no-show e remarcação' },
+    { nome: 'Contrato fechado', v: C.ganhos, base: C.realizados, leitura: 'Win rate sobre os realizados' },
+    { nome: 'Inicial protocolada no prazo', v: T.iniDentro, base: T.iniProt,
+      leitura: 'Entrega do que foi vendido — base própria da Controladoria' }
+  ];
+
+  destruir('vazamento');
+  graficos.vazamento = new Chart(document.getElementById('grafVazamento'), {
+    type: 'bar',
+    data: {
+      labels: etapas.map(e => e.nome),
+      datasets: [{ label: 'Volume', data: etapas.map(e => e.v),
+        backgroundColor: [COR_AZUL, COR_CIANO, COR_ROXO, COR_AMARELO, COR_VERDE, '#84cc16'],
+        borderRadius: 4, maxBarThickness: 40 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      scales: { x: { ticks: { precision: 0 }, grid: { color: COR_BORDA } }, y: { grid: { display: false } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => num(ctx.parsed.x) + ' · ' +
+          pct1(etapas[0].v ? ctx.parsed.x / etapas[0].v * 100 : null) + ' do topo' } }
+      }
+    }
+  });
+
+  document.getElementById('corpoVazamento').innerHTML = etapas.map(e => {
+    const conv = e.base ? e.v / e.base * 100 : null;
+    const perda = e.base ? e.base - e.v : null;
+    const cor = conv === null ? 'neutro' : conv >= 80 ? 'verde' : conv >= 50 ? 'amarelo' : 'vermelho';
+    return '<tr><td><b>' + e.nome + '</b></td>' +
+      '<td>' + (e.base !== null ? num(e.base) : '—') + '</td>' +
+      '<td>' + num(e.v) + '</td>' +
+      '<td>' + (perda !== null && perda > 0 ? '<span class="val-neg">-' + num(perda) + '</span>' : '—') + '</td>' +
+      '<td>' + (conv === null ? '—' : '<span class="tag-pct ' + cor + '">' + pct1(conv) + '</span>') + '</td>' +
+      '<td style="white-space:normal;color:var(--texto-muted)">' + e.leitura + '</td></tr>';
+  }).join('');
+}
+
+/* ---------- Ritmo ---------- */
+function renderRitmo(R) {
+  const A = R.alvaras, C = R.crm;
+  const hoje = R.hoje;
+  const meses = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    meses.push({ o: d.getFullYear() * 12 + d.getMonth(), label: labelMesData(d), hon: 0, contratos: 0, analises: 0 });
+  }
+  const idx = {}; meses.forEach(m => { idx[m.o] = m; });
+  A.linhas.forEach(x => {
+    if (!x.dataCred) return;
+    const o = x.dataCred.getFullYear() * 12 + x.dataCred.getMonth();
+    if (idx[o]) idx[o].hon += x.honorarios;
+  });
+  C.atend.forEach(x => {
+    if (!x.dataAt || !x.ganho) return;
+    const o = x.dataAt.getFullYear() * 12 + x.dataAt.getMonth();
+    if (idx[o]) idx[o].contratos++;
+  });
+  C.analises.forEach(x => {
+    if (!x.mes) return;
+    const o = ordemMes(x.mes);
+    if (idx[o]) idx[o].analises++;
+  });
+
+  destruir('ritmo');
+  graficos.ritmo = new Chart(document.getElementById('grafRitmo'), {
+    type: 'bar',
+    data: {
+      labels: meses.map(m => m.label),
+      datasets: [
+        { label: 'Honorários creditados', data: meses.map(m => m.hon), backgroundColor: COR_VERDE,
+          borderRadius: 4, maxBarThickness: 30, yAxisID: 'y', order: 3 },
+        { label: 'Contratos fechados', data: meses.map(m => m.contratos), type: 'line',
+          borderColor: COR_AZUL, backgroundColor: COR_AZUL, borderWidth: 2, pointRadius: 3,
+          tension: .3, yAxisID: 'y1', order: 1 },
+        { label: 'Análises produzidas', data: meses.map(m => m.analises), type: 'line',
+          borderColor: COR_ROXO, backgroundColor: COR_ROXO, borderWidth: 2, borderDash: [4, 3],
+          pointRadius: 2, tension: .3, yAxisID: 'y1', order: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false } },
+        y: { ticks: { callback: v => moedaCurta(v) }, grid: { color: COR_BORDA } },
+        y1: { position: 'right', ticks: { precision: 0 }, grid: { display: false } }
+      },
+      plugins: { tooltip: { callbacks: {
+        label: ctx => ctx.dataset.label + ': ' +
+          (ctx.dataset.yAxisID === 'y' ? moeda(ctx.parsed.y) : num(ctx.parsed.y))
+      } } }
+    }
+  });
+}
+
+/* ---------- Concentração ---------- */
+function renderConcentracao(R) {
+  const top = Object.entries(R.execucoes.reus).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  destruir('concentracao');
+  graficos.concentracao = new Chart(document.getElementById('grafConcentracao'), {
+    type: 'bar',
+    data: {
+      labels: top.map(([n]) => n.length > 22 ? n.slice(0, 20) + '…' : n),
+      datasets: [{ label: 'Valor', data: top.map(([, v]) => v), backgroundColor: COR_ROXO, borderRadius: 4, maxBarThickness: 26 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      scales: { x: { ticks: { callback: v => moedaCurta(v) }, grid: { color: COR_BORDA } }, y: { grid: { display: false } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => moeda(ctx.parsed.x) } } }
+    }
+  });
+
+  const pessoas = R.diligencias.porResponsavel.slice(0, 6);
+  destruir('pessoas');
+  graficos.pessoas = new Chart(document.getElementById('grafPessoas'), {
+    type: 'bar',
+    data: {
+      labels: pessoas.map(([n]) => n),
+      datasets: [{ label: 'Diligências', data: pessoas.map(([, v]) => v),
+        backgroundColor: pessoas.map(([, v]) => R.diligencias.total && v / R.diligencias.total > 0.6 ? COR_VERMELHO : COR_CIANO),
+        borderRadius: 4, maxBarThickness: 40 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { x: { grid: { display: false } }, y: { ticks: { precision: 0 }, grid: { color: COR_BORDA } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => num(ctx.parsed.y) + ' diligências · ' +
+          pct1(R.diligencias.total ? ctx.parsed.y / R.diligencias.total * 100 : null) + ' do total'
+      } } }
+    }
+  });
+}
+
+/* ---------- Confiabilidade ---------- */
+function renderQualidade(R) {
+  const A = R.alvaras, C = R.crm, T = R.controladoria, D = R.diligencias, B = R.clientes, E = R.execucoes;
+  const linhas = [
+    { fonte: 'Alvarás e Acordos', reg: A.linhas.length,
+      lacuna: A.semRateioQtd ? num(A.semRateioQtd) + ' alvarás sem rateio informado' : 'sem lacuna relevante',
+      efeito: A.semRateioQtd ? 'Take rate subavaliado' : 'Leitura confiável',
+      conf: A.semRateioQtd ? (A.semRateioQtd / A.linhas.length > 0.15 ? 'baixa' : 'media') : 'alta' },
+    { fonte: 'CRM — Atendimentos', reg: C.atendimentos,
+      lacuna: C.semDesfecho ? num(C.semDesfecho) + ' atendimentos sem desfecho' : 'sem lacuna relevante',
+      efeito: C.semDesfecho ? 'Win rate real desconhecido' : 'Leitura confiável',
+      conf: C.semDesfecho / Math.max(1, C.realizados) > 0.3 ? 'baixa' : C.semDesfecho ? 'media' : 'alta' },
+    { fonte: 'CRM — Análises', reg: C.total,
+      lacuna: 'campos de negociação (temperatura, próximo passo) pouco preenchidos',
+      efeito: 'Impede prever fechamento', conf: 'media' },
+    { fonte: 'Controladoria', reg: T.iniTotal + T.onboarding.length + T.audiencias.length,
+      lacuna: T.onbSemRegistro ? num(T.onbSemRegistro) + ' clientes sem registro de onboarding' : 'datas vazias como 1899/1900',
+      efeito: 'Cobertura de onboarding incerta', conf: T.onbSemRegistro > 5 ? 'media' : 'alta' },
+    { fonte: 'Diligências', reg: D.total,
+      lacuna: D.semContato ? num(D.semContato) + ' sem registro de contato' : 'sem lacuna relevante',
+      efeito: D.semContato ? 'Não comprova diligência ao cliente' : 'Leitura confiável',
+      conf: D.total && D.semContato / D.total > 0.4 ? 'baixa' : 'media' },
+    { fonte: 'Base de Clientes', reg: B.total,
+      lacuna: 'coluna "Processos Vinculados" vazia · ' + num(B.kommoOrfaos) + ' contatos sem identificação',
+      efeito: 'Impede medir resultado por cliente', conf: 'media' },
+    { fonte: 'Execuções', reg: E.processos,
+      lacuna: E.diligenciar ? num(E.diligenciar) + ' marcados para diligenciar sem tarefa' : 'sem lacuna relevante',
+      efeito: 'Fila sinalizada mas não executada', conf: 'alta' }
+  ];
+  const badge = { alta: '<span class="tag-pct verde">Alta</span>', media: '<span class="tag-pct amarelo">Média</span>', baixa: '<span class="tag-pct vermelho">Baixa</span>' };
+  document.getElementById('corpoQualidade').innerHTML = linhas.map(l =>
+    '<tr><td><b>' + l.fonte + '</b></td><td>' + num(l.reg) + '</td>' +
+    '<td style="white-space:normal">' + l.lacuna + '</td>' +
+    '<td style="white-space:normal;color:var(--texto-muted)">' + l.efeito + '</td>' +
+    '<td>' + badge[l.conf] + '</td></tr>').join('');
+}
+
+/* =========================================================================
+   CICLO
+   ========================================================================= */
+let buscaMontada = false;
+function montarControles() {
+  if (buscaMontada) return;
+  buscaMontada = true;
+  document.getElementById('buscaCampo').innerHTML = campoBusca('inputBusca', 'Buscar alerta, área ou responsável…');
+  ligarBusca('inputBusca', v => { FILTRO.termo = v; renderAlertas(); });
+  document.getElementById('filtrosAlerta').addEventListener('click', ev => {
+    const b = ev.target.closest('.chip');
+    if (!b) return;
+    if (b.dataset.sev) {
+      FILTRO.sev = b.dataset.sev;
+      document.querySelectorAll('#filtrosAlerta .chip[data-sev]').forEach(x => x.classList.toggle('ativo', x === b));
+    } else if (b.dataset.area) {
+      FILTRO.area = b.dataset.area;
+      document.querySelectorAll('#filtrosAlerta .chip[data-area]').forEach(x => x.classList.toggle('ativo', x === b));
+    }
+    renderAlertas();
+  });
+}
+
+function render(dados) {
+  const R = consolidar(dados, hojeZerado());
+  R.alertas = montarAlertas(R);
+  BASE = R;
+  montarControles();
+  renderTermometro(R, R.alertas);
+  renderKPIs(R);
+  renderCapital(R);
+  renderAlertas();
+  renderAgenda();
+  renderVazamento(R);
+  renderRitmo(R);
+  renderConcentracao(R);
+  renderQualidade(R);
+}
+
+
+/* =========================================================================
+   CICLO / AUTENTICAÇÃO
+   ========================================================================= */
+let DADOS = null;
+
+async function carregarDados() {
+  const erroEl = document.getElementById('erroBox');
+  try {
+    DADOS = await buscarTudo();
+    const idLink = CONFIG.SHEET_ID ||
+      (CONFIG.SHEETS ? Object.values(CONFIG.SHEETS)[0] : null);
+    const linkEl = document.getElementById('linkPlanilha');
+    if (idLink) linkEl.href = 'https://docs.google.com/spreadsheets/d/' + idLink + '/edit';
+    else linkEl.style.display = 'none';
+    document.getElementById('carregando').classList.add('oculto');
+    document.getElementById('conteudo').classList.remove('oculto');
+    erroEl.classList.add('oculto');
+    document.getElementById('atualizadoEm').textContent =
+      'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    render(DADOS);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('carregando').classList.add('oculto');
+    erroEl.classList.remove('oculto');
+    erroEl.innerHTML = '<b>Não foi possível carregar a planilha.</b><br>' + e.message +
+      '<br>Verifique se a planilha continua compartilhada como <b>"qualquer pessoa com o link pode ver"</b>.' +
+      ' Nova tentativa automática em ' + CONFIG.AUTO_REFRESH_MIN + ' min.';
+  }
+}
+
+document.getElementById('btnAtualizar').addEventListener('click', carregarDados);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && DADOS) carregarDados(); });
+setInterval(() => { if (DADOS) carregarDados(); }, CONFIG.AUTO_REFRESH_MIN * 60 * 1000);
+
+const CHAVE_SESSAO = 'dashboard-ceo_sessao';
+
+function entrarNoPainel(segredo, guardar) {
+  // Copia tudo o que o cofre trouxer: um painel pode guardar uma planilha
+  // (SHEET_ID) ou várias (SHEETS), além da chave da API.
+  Object.assign(CONFIG, segredo);
+  if (guardar) { try { sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(segredo)); } catch (e) {} }
+  document.getElementById('loginOverlay').classList.add('oculto');
+  document.getElementById('cabecalho').classList.remove('oculto');
+  document.getElementById('carregando').classList.remove('oculto');
+  carregarDados();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById('btnEntrar');
+  const erroEl = document.getElementById('loginErro');
+  erroEl.classList.add('oculto');
+  btn.disabled = true; btn.textContent = 'Verificando…';
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const segredo = await abrirCofre(
+      document.getElementById('campoUsuario').value,
+      document.getElementById('campoSenha').value);
+    btn.textContent = 'Entrando…';
+    entrarNoPainel(segredo, true);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Entrar';
+    erroEl.classList.remove('oculto');
+    erroEl.textContent = 'Login ou senha sem acesso a este painel.';
+    document.getElementById('campoSenha').value = '';
+    document.getElementById('campoSenha').focus();
+  }
+});
+
+document.getElementById('btnSair').addEventListener('click', () => {
+  try { sessionStorage.removeItem(CHAVE_SESSAO); } catch (e) {}
+  location.reload();
+});
+
+(async function iniciar() {
+  let salvo = null;
+  try { salvo = sessionStorage.getItem(CHAVE_SESSAO); } catch (e) {}
+  if (salvo) { try { entrarNoPainel(JSON.parse(salvo), false); return; } catch (e) {} }
+  let cred = null;
+  try { cred = JSON.parse(sessionStorage.getItem('bm_portal_cred') || 'null'); } catch (e) {}
+  if (cred && cred.u != null && cred.s != null) {
+    try { entrarNoPainel(await abrirCofre(cred.u, cred.s), true); return; } catch (e) {}
+  }
+  document.getElementById('campoUsuario').focus();
+})();
+</script>
+</body>
+</html>
