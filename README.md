@@ -76,10 +76,43 @@ Campo de pergunta em linguagem natural sobre os números do painel, no topo da p
 - **Chave da API**: colada pelo próprio usuário e guardada **apenas no `localStorage`
   do navegador**. Nunca vai para o repositório nem para servidor algum — a única
   saída é a chamada direta à API do Claude.
-- **Não estima**: toda pergunta quantitativa passa por uma de duas ferramentas —
-  `consultar_metricas` (snapshot conferido de todas as áreas) e `listar_alertas`
-  (alertas com diagnóstico, causa, solução, responsável e prazo). O modelo só pode
-  responder com o que a ferramenta devolveu.
+- **Não estima**: toda resposta passa por ferramentas que leem os dados. O modelo só
+  pode responder com o que a ferramenta devolveu.
+
+### Ferramentas do consultor
+
+| Ferramenta | Para que serve |
+|---|---|
+| `consultar_metricas` | Snapshot conferido de todas as áreas (agregados) |
+| `listar_alertas` | Alertas com diagnóstico, causa, solução, responsável e prazo |
+| `listar_registros` | **Registros individuais** — processo a processo, cliente a cliente. Responde "quais", "me dê a lista", "quem são" |
+| `buscar` | Procura um cliente, processo, réu ou vara em todas as fontes de uma vez |
+| `explorar_planilhas` | Lista as 14 planilhas do escritório e as abas de cada uma |
+| `consultar_planilha` | Lê qualquer aba sob demanda, inclusive das planilhas que não alimentam o painel |
+
+### Recortes de `listar_registros`
+
+| Fonte | Recortes |
+|---|---|
+| `alvaras` | todos, sem_rateio, pendente_repasse_bm, pendente_repasse_cliente, fora_do_fluxo, maiores_valores |
+| `crm_analises` | todas, viaveis_sem_agenda, pendentes, inviaveis |
+| `crm_atendimentos` | todos, sem_desfecho, no_show, ganhos, perdidos |
+| `iniciais` | todas, vencidas_sem_protocolo, fora_do_prazo, no_prazo |
+| `onboarding` | todas, sem_registro, nao_realizada |
+| `audiencias` | todas, futuras, sem_ciencia, proximos_7_dias |
+| `diligencias` | todas, abertas, sem_contato, mais_de_15_dias, cumpridas |
+| `execucoes` | todos, prazo_vencido, vencendo_7_dias, marcados_diligenciar, itiv_pagamento_vencido, maiores_valores |
+
+### As 14 planilhas ao alcance do consultor
+
+Seis alimentam o painel visual (Alvarás, CRM, Controladoria, Diligências, Execuções e
+Base de Clientes). As outras oito são lidas **sob demanda**, só quando a pergunta exige:
+Fluxo Financeiro (DRE), Fluxo de Honorários, Fluxo de Clientes, Metas e Resultados —
+Processual, KPIs do Comercial, Clientes e Processos, Processos [DataJud + DJEN] e Metas
+Gerais.
+
+Abas que não são tabelas (o DRE, por exemplo, é uma matriz) são detectadas e entregues
+em formato adequado, com aviso — a leitura não quebra nem inventa colunas.
 - **Cuidados embutidos no prompt**: distinguir receita potencial estimada de dinheiro
   parado, nunca somar valores de alertas diferentes (carteiras se sobrepõem) e alertar
   que o win rate considera só os atendimentos com desfecho registrado.
