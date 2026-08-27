@@ -67,3 +67,23 @@ Cada alerta responde a cinco perguntas, nesta ordem:
   gid antes de montar o range.
 - Toda leitura de coluna é por nome de cabeçalho, com fallback pela letra da coluna.
 - Atualização automática a cada 5 minutos. Arquivo único `index.html`, sem build.
+
+## Consultor IA
+
+Campo de pergunta em linguagem natural sobre os números do painel, no topo da página.
+
+- **Modelo**: Claude Sonnet 5.
+- **Chave da API**: colada pelo próprio usuário e guardada **apenas no `localStorage`
+  do navegador**. Nunca vai para o repositório nem para servidor algum — a única
+  saída é a chamada direta à API do Claude.
+- **Não estima**: toda pergunta quantitativa passa por uma de duas ferramentas —
+  `consultar_metricas` (snapshot conferido de todas as áreas) e `listar_alertas`
+  (alertas com diagnóstico, causa, solução, responsável e prazo). O modelo só pode
+  responder com o que a ferramenta devolveu.
+- **Cuidados embutidos no prompt**: distinguir receita potencial estimada de dinheiro
+  parado, nunca somar valores de alertas diferentes (carteiras se sobrepõem) e alertar
+  que o win rate considera só os atendimentos com desfecho registrado.
+
+Cinco perguntas sugeridas ficam disponíveis em um clique, entre elas *"Quais são minhas
+3 prioridades desta semana?"* e *"Se eu só puder resolver um problema este mês, qual
+deve ser?"*.

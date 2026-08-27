@@ -418,6 +418,42 @@
   }
   .alerta-abrir { color: var(--azul-claro); font-weight: 600; }
   @media (max-width: 720px) { .alerta-prazo { margin-left: 0; } }
+
+  /* Consultor IA */
+  .ia-chave {
+    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.35);
+    border-radius: 10px; padding: .8rem .95rem; margin-bottom: .9rem;
+    font-size: .82rem; color: #fcd34d; line-height: 1.5;
+  }
+  .ia-chave b { color: #fde68a; }
+  .ia-chave-linha { display: flex; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; }
+  .ia-chave-linha .campo-texto { flex: 1 1 240px; }
+  .ia-box {
+    max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: .7rem;
+    padding: .3rem .1rem .3rem 0;
+  }
+  .ia-box::-webkit-scrollbar { width: 8px; }
+  .ia-box::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+  .ia-msg { padding: .75rem .95rem; border-radius: 11px; max-width: 88%; }
+  .ia-msg.a { background: var(--bg3); border: 1px solid var(--borda); align-self: flex-start; }
+  .ia-msg.u { background: rgba(37,99,235,.15); border: 1px solid rgba(59,130,246,.32); align-self: flex-end; }
+  .ia-quem {
+    font-size: .64rem; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--texto-muted); font-weight: 700; margin-bottom: .3rem;
+  }
+  .ia-corpo { font-size: .87rem; line-height: 1.62; white-space: pre-wrap; word-break: break-word; }
+  .ia-corpo b { color: #fff; }
+  .ia-sugestoes { display: flex; flex-wrap: wrap; gap: .4rem; margin: .9rem 0 .8rem; }
+  .ia-sugestao {
+    background: var(--bg3); border: 1px solid var(--borda); border-radius: 999px;
+    color: var(--texto-muted); font-size: .76rem; font-family: inherit;
+    padding: .35rem .8rem; cursor: pointer; transition: all .15s;
+  }
+  .ia-sugestao:hover { border-color: var(--azul-claro); color: var(--texto); }
+  .ia-entrada { display: flex; flex-direction: column; gap: .55rem; }
+  .ia-entrada textarea { resize: vertical; min-height: 58px; font-size: .87rem; line-height: 1.5; }
+  .ia-botoes { display: flex; gap: .5rem; align-items: center; }
+  .ia-botoes .btn-entrar { width: auto; margin-top: 0; padding: .55rem 1.4rem; }
 </style>
 </head>
 <body>
@@ -478,6 +514,45 @@
     <div class="secao-titulo">Termômetro do Escritório</div>
     <div class="secao-sub" id="subTermometro">—</div>
     <div class="termo-grid" id="termometro"></div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Consultor IA</div>
+    <div class="secao-sub">Pergunte em português sobre qualquer número deste painel. O consultor <b>consulta os dados consolidados</b> antes de responder — não estima.</div>
+
+    <div class="card">
+      <div class="ia-chave" id="iaChave">
+        <span>Cole sua <b>chave da API do Claude</b> para ativar o consultor. Ela fica salva só neste navegador e nunca é enviada para o repositório.</span>
+        <div class="ia-chave-linha">
+          <input type="password" class="campo-texto" id="inputChave" placeholder="sk-ant-..." autocomplete="off" />
+          <button type="button" class="btn-topo" id="btnSalvarChave">Salvar chave</button>
+        </div>
+      </div>
+
+      <div class="ia-box" id="iaBox">
+        <div class="ia-msg a">
+          <div class="ia-quem">Consultor</div>
+          <div class="ia-corpo">Pergunte o que quiser sobre os números do escritório. Eu consulto o painel consolidado e respondo com valores conferidos — se algo for projeção, eu aviso.</div>
+        </div>
+      </div>
+
+      <div class="ia-sugestoes">
+        <button type="button" class="ia-sugestao">Quais são minhas 3 prioridades desta semana?</button>
+        <button type="button" class="ia-sugestao">Onde estou perdendo mais dinheiro?</button>
+        <button type="button" class="ia-sugestao">Como está a saúde do funil comercial?</button>
+        <button type="button" class="ia-sugestao">Qual o maior risco jurídico agora?</button>
+        <button type="button" class="ia-sugestao">Se eu só puder resolver um problema este mês, qual deve ser?</button>
+      </div>
+
+      <div class="ia-entrada">
+        <textarea class="campo-texto" id="iaInput" rows="2" placeholder="Ex.: por que o win rate está em 22%? O que fazer para subir?"></textarea>
+        <div class="ia-botoes">
+          <button type="button" class="btn-entrar" id="btnPerguntar">Perguntar</button>
+          <button type="button" class="btn-topo" id="btnLimparIA">Limpar conversa</button>
+        </div>
+      </div>
+      <div class="secao-sub" style="margin:.7rem 0 0 0">Modelo: Claude Sonnet 5 · a conversa não sai do seu navegador, exceto a chamada à API do Claude.</div>
+    </div>
   </section>
 
   <section class="secao">
@@ -1757,6 +1832,283 @@ function montarAlertas(R) {
 
 
 /* =========================================================================
+   CONSULTOR IA
+   Responde sobre os números do painel. As perguntas quantitativas passam
+   obrigatoriamente por ferramentas que leem o snapshot consolidado — o
+   modelo não estima, consulta. A chave da API fica só no navegador do
+   usuário (localStorage), nunca no repositório.
+   ========================================================================= */
+const IA_MODELO = 'claude-sonnet-5';
+const LS_CHAVE = 'bm_ceo_api_key';
+let HIST = [];
+
+const chaveIA = () => { try { return (localStorage.getItem(LS_CHAVE) || '').trim(); } catch (e) { return ''; } };
+
+/** Snapshot enxuto e serializável do painel — é o que a IA enxerga. */
+function snapshot() {
+  const R = BASE;
+  if (!R) return {};
+  const A = R.alvaras, C = R.crm, T = R.controladoria, D = R.diligencias, E = R.execucoes, B = R.clientes;
+  const n = v => (v === null || v === undefined || !isFinite(v)) ? null : Math.round(v * 100) / 100;
+  return {
+    posicao: R.hoje.toLocaleDateString('pt-BR'),
+    financeiro: {
+      honorarios_ultimos_12_meses: n(A.receita12),
+      valor_creditado_historico: n(A.creditado),
+      honorarios_historico: n(A.honorarios),
+      take_rate_pct: n(A.takeRate),
+      devido_a_clientes_historico: n(A.devidoCliente),
+      honorarios_pendentes_repasse_ao_escritorio: n(A.pendBMValor),
+      qtd_honorarios_pendentes: A.pendBMQtd,
+      valores_pendentes_repasse_ao_cliente: n(A.pendCliValor),
+      qtd_repasses_cliente_pendentes: A.pendCliQtd,
+      prazo_medio_repasse_ao_cliente_dias: n(A.prazoRepasse),
+      alvaras_sem_rateio_qtd: A.semRateioQtd,
+      alvaras_sem_rateio_valor: n(A.semRateioValor),
+      receita_fora_do_fluxo_qtd: A.foraFluxoQtd,
+      receita_fora_do_fluxo_valor: n(A.foraFluxoValor)
+    },
+    comercial: {
+      analises_produzidas: C.total,
+      analises_viaveis: C.viaveis,
+      taxa_viabilidade_pct: n(C.taxaViab),
+      viaveis_sem_atendimento_agendado: C.viavelSemAgenda,
+      receita_potencial_estimada_desses_viaveis: n(C.valorViavelSemAgenda),
+      atendimentos_total: C.atendimentos,
+      atendimentos_realizados: C.realizados,
+      no_show: C.noShow,
+      taxa_no_show_pct: n(C.taxaNoShow),
+      contratos_ganhos: C.ganhos,
+      leads_perdidos: C.perdidos,
+      atendimentos_sem_desfecho: C.semDesfecho,
+      win_rate_pct: n(C.winRate),
+      ticket_medio_honorarios_iniciais: n(C.ticket),
+      sla_medio_entrega_analise_dias: n(C.slaMedio)
+    },
+    compromissos_com_cliente: {
+      iniciais_acompanhadas: T.iniTotal,
+      iniciais_protocoladas: T.iniProt,
+      protocoladas_no_prazo: T.iniDentro,
+      protocoladas_fora_do_prazo: T.iniFora,
+      taxa_protocolo_no_prazo_pct: n(T.taxaPrazo),
+      atraso_medio_dias: n(T.atrasoMedio),
+      iniciais_vencidas_sem_protocolo: T.iniVencidas,
+      pior_atraso_em_aberto_dias: T.piorAtraso,
+      onboarding_sem_registro: T.onbSemRegistro,
+      onboarding_nao_realizada: T.onbNaoRealizada,
+      audiencias_futuras: T.audFuturas,
+      audiencias_sem_ciencia_do_cliente: T.audSemCiencia,
+      audiencias_sem_nenhum_aviso: T.audSemAviso,
+      audiencias_nos_proximos_7_dias: T.aud7
+    },
+    operacional: {
+      diligencias_total: D.total,
+      diligencias_cumpridas: D.cumpridas,
+      diligencias_abertas: D.abertas,
+      taxa_cumprimento_pct: n(D.taxaCumprimento),
+      idade_media_backlog_dias: n(D.idadeMedia),
+      abertas_ha_mais_de_15_dias: D.velhas15,
+      sem_registro_de_contato: D.semContato,
+      valores_a_receber_em_aberto: D.valAbertas,
+      carga_por_responsavel: D.porResponsavel.map(([nome, qtd]) => ({ nome, qtd })),
+      concentracao_maior_executor_pct: D.concentracaoPessoa ? n(D.concentracaoPessoa.pct) : null
+    },
+    execucoes: {
+      valor_total_em_execucao: n(E.total),
+      processos_em_acompanhamento: E.processos,
+      prazos_vencidos: E.vencidos,
+      vencendo_em_7_dias: E.aVencer7,
+      marcados_para_diligenciar: E.diligenciar,
+      itiv_com_pagamento_vencido: E.itivVencidos || 0,
+      por_aba: Object.entries(E.porAba).map(([k, v]) => ({ aba: v.nome, valor: n(v.valor), processos: v.qtd })),
+      maiores_contrapartes: Object.entries(E.reus).sort((a, b) => b[1] - a[1]).slice(0, 10)
+        .map(([nome, valor]) => ({ nome, valor: n(valor) }))
+    },
+    carteira: {
+      clientes_total: B.total, pessoa_fisica: B.pf, pessoa_juridica: B.pj,
+      documentos_invalidos: B.docInvalido, cadastros_duplicados: B.duplicados,
+      contatos_kommo_sem_identificacao: B.kommoOrfaos
+    }
+  };
+}
+
+function alertasParaIA() {
+  return (BASE.alertas || []).map(a => ({
+    severidade: a.sev, area: a.area, titulo: a.titulo,
+    indicador: a.metrica,
+    valor_envolvido: a.impacto || null,
+    tipo_do_valor: a.impactoTipo === 'potencial' ? 'receita potencial estimada' : (a.impacto ? 'valor existente' : null),
+    situacao: a.resumo.replace(/<[^>]+>/g, ''),
+    diagnostico: a.diagnostico.replace(/<[^>]+>/g, ''),
+    causa_provavel: a.causa,
+    proposta_de_solucao: a.solucao.map(s => s.replace(/<[^>]+>/g, '')),
+    indicador_de_sucesso: a.indicador,
+    responsavel_sugerido: a.dono, prazo: a.prazo, fonte: a.fonte
+  }));
+}
+
+const IA_TOOLS = [
+  { name: 'consultar_metricas',
+    description: 'Devolve o snapshot completo e conferido de todos os números do painel: financeiro, comercial, compromissos com o cliente, operacional, execuções e carteira. Use para QUALQUER pergunta quantitativa.',
+    input_schema: { type: 'object', properties: {
+      area: { type: 'string', enum: ['tudo', 'financeiro', 'comercial', 'compromissos_com_cliente', 'operacional', 'execucoes', 'carteira'],
+        description: 'Recorte desejado. Use "tudo" quando a pergunta for ampla.' } },
+      required: ['area'] } },
+  { name: 'listar_alertas',
+    description: 'Lista os alertas ativos do painel com severidade, diagnóstico, causa provável, proposta de solução, responsável e prazo. Use quando a pergunta for sobre problemas, riscos, prioridades ou o que fazer.',
+    input_schema: { type: 'object', properties: {
+      severidade: { type: 'string', enum: ['todos', 'critico', 'alto', 'medio'] },
+      area: { type: 'string', enum: ['todas', 'Comercial', 'Operacional', 'Financeiro', 'Risco'] } },
+      required: ['severidade'] } }
+];
+
+function executarFerramenta(nome, entrada) {
+  if (nome === 'consultar_metricas') {
+    const s = snapshot();
+    const a = (entrada && entrada.area) || 'tudo';
+    if (a === 'tudo' || !s[a]) return s;
+    return { posicao: s.posicao, [a]: s[a] };
+  }
+  if (nome === 'listar_alertas') {
+    let lista = alertasParaIA();
+    const sev = entrada && entrada.severidade;
+    const ar = entrada && entrada.area;
+    if (sev && sev !== 'todos') lista = lista.filter(x => x.severidade === sev);
+    if (ar && ar !== 'todas') lista = lista.filter(x => x.area === ar);
+    return { total: lista.length, alertas: lista };
+  }
+  return { erro: 'ferramenta desconhecida' };
+}
+
+function promptSistema() {
+  return [
+    'Você é o consultor de gestão do CEO da Borges Macedo Advocacia e Consultoria, com experiência de departamento jurídico.',
+    'Responda como quem responde pelo resultado do escritório: prioridade, dinheiro, risco, prazo e capacidade da equipe.',
+    '',
+    'Este painel consolida seis planilhas: Alvarás e Acordos, CRM (diagnósticos, pareceres e atendimentos), Controladoria Jurídica (iniciais, onboarding, audiências), Diligências, Execuções de Sentença e Base de Clientes.',
+    '',
+    'REGRA CENTRAL: para qualquer pergunta quantitativa ou sobre problemas, chame as ferramentas e use SOMENTE os números devolvidos. Nunca estime, nunca invente número que não veio da ferramenta.',
+    '',
+    'Cuidados com os números deste painel:',
+    '- Valores marcados como "receita potencial estimada" são projeção a partir do ticket médio e da taxa de conversão — não são dinheiro parado. Deixe isso explícito quando citá-los.',
+    '- Os valores de alertas diferentes NÃO são somáveis: carteiras distintas podem conter o mesmo processo. Nunca apresente um total somando alertas.',
+    '- Win rate considera apenas atendimentos com desfecho registrado; há atendimentos sem desfecho que tornam o número real incerto — mencione isso se for relevante.',
+    '- "Take rate" é quanto dos valores creditados fica como honorário do escritório.',
+    '',
+    'Estilo: português do Brasil, direto, começando pelo número ou pela conclusão. Depois, no máximo 3 a 5 pontos de leitura gerencial. Quando o usuário perguntar o que fazer, use a proposta de solução do alerta correspondente e priorize por severidade e por dinheiro envolvido. Se a pergunta for ambígua, assuma a leitura mais útil e declare a suposição. Não exponha raciocínio interno.'
+  ].join('\n');
+}
+
+async function chamarIA(mensagens) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': chaveIA(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: IA_MODELO, max_tokens: 2000,
+      system: promptSistema(), tools: IA_TOOLS, messages: mensagens
+    })
+  });
+  let data;
+  try { data = await res.json(); } catch (e) { throw new Error('Resposta inválida da API (HTTP ' + res.status + ')'); }
+  if (!res.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + res.status));
+  return data;
+}
+
+function msgIA(classe, quem, texto) {
+  const d = document.createElement('div');
+  d.className = 'ia-msg ' + classe;
+  d.innerHTML = '<div class="ia-quem">' + quem + '</div><div class="ia-corpo">' + esc(texto) + '</div>';
+  const box = document.getElementById('iaBox');
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+  return d;
+}
+
+/** Formatação leve: **negrito**, quebras e marcadores. */
+function formatarResposta(t) {
+  return esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/^[-•]\s+/gm, '· ')
+    .replace(/\n/g, '<br>');
+}
+
+async function perguntarIA(texto) {
+  if (!texto.trim()) return;
+  if (!chaveIA()) {
+    document.getElementById('iaChave').classList.remove('oculto');
+    document.getElementById('inputChave').focus();
+    return;
+  }
+  if (!BASE) { msgIA('a', 'Consultor', 'Os dados ainda estão carregando. Tente em alguns segundos.'); return; }
+
+  msgIA('u', 'Você', texto);
+  document.getElementById('iaInput').value = '';
+  document.getElementById('btnPerguntar').disabled = true;
+  const pensando = msgIA('a', 'Consultor', 'Consultando os números do painel…');
+  HIST.push({ role: 'user', content: texto });
+
+  try {
+    for (let volta = 0; volta < 6; volta++) {
+      const r = await chamarIA(HIST);
+      HIST.push({ role: 'assistant', content: r.content });
+      const usos = (r.content || []).filter(b => b.type === 'tool_use');
+      const txt = (r.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+      if (!usos.length) {
+        pensando.querySelector('.ia-corpo').innerHTML = txt ? formatarResposta(txt) : '(sem resposta)';
+        break;
+      }
+      pensando.querySelector('.ia-corpo').textContent =
+        'Consultando ' + usos.map(u => u.name.replace('_', ' ')).join(' e ') + '…';
+      const resultados = usos.map(u => ({
+        type: 'tool_result', tool_use_id: u.id,
+        content: JSON.stringify(executarFerramenta(u.name, u.input))
+      }));
+      HIST.push({ role: 'user', content: resultados });
+    }
+  } catch (e) {
+    pensando.querySelector('.ia-corpo').innerHTML =
+      '<span style="color:var(--vermelho)">Não consegui responder: ' + esc(e.message) + '</span>';
+  } finally {
+    document.getElementById('btnPerguntar').disabled = false;
+  }
+}
+
+function montarIA() {
+  if (chaveIA()) document.getElementById('iaChave').classList.add('oculto');
+
+  document.getElementById('btnSalvarChave').addEventListener('click', () => {
+    const k = document.getElementById('inputChave').value.trim();
+    if (!k) return;
+    try { localStorage.setItem(LS_CHAVE, k); } catch (e) {}
+    document.getElementById('iaChave').classList.add('oculto');
+    document.getElementById('inputChave').value = '';
+    msgIA('a', 'Consultor', 'Chave salva neste navegador. Pode perguntar.');
+  });
+
+  document.getElementById('btnPerguntar').addEventListener('click', () =>
+    perguntarIA(document.getElementById('iaInput').value));
+
+  document.getElementById('iaInput').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); perguntarIA(ev.target.value); }
+  });
+
+  document.querySelectorAll('.ia-sugestao').forEach(b =>
+    b.addEventListener('click', () => perguntarIA(b.textContent)));
+
+  document.getElementById('btnLimparIA').addEventListener('click', () => {
+    HIST = [];
+    document.getElementById('iaBox').innerHTML = '';
+    msgIA('a', 'Consultor', 'Conversa reiniciada. Pergunte o que quiser sobre os números do painel.');
+  });
+}
+
+
+/* =========================================================================
    RENDERIZAÇÃO
    ========================================================================= */
 const ROTULO_SEV = { critico: 'Crítico', alto: 'Alto', medio: 'Médio' };
@@ -2154,6 +2506,7 @@ let buscaMontada = false;
 function montarControles() {
   if (buscaMontada) return;
   buscaMontada = true;
+  montarIA();
   document.getElementById('buscaCampo').innerHTML = campoBusca('inputBusca', 'Buscar alerta, área ou responsável…');
   ligarBusca('inputBusca', v => { FILTRO.termo = v; renderAlertas(); });
   document.getElementById('filtrosAlerta').addEventListener('click', ev => {
