@@ -463,6 +463,11 @@
     font-size: .82rem; color: #fcd34d; line-height: 1.5;
   }
   .ia-chave b { color: #fde68a; }
+  /* Quando a chave vem do cofre não há aviso a dar — é confirmação */
+  .ia-chave.pronta {
+    background: var(--verde-fraco); border-color: rgba(34,197,94,.35); color: #86efac;
+  }
+  .ia-chave.pronta b { color: #bbf7d0; }
   .ia-chave-linha { display: flex; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; }
   .ia-chave-linha .campo-texto { flex: 1 1 240px; }
   .ia-box {
@@ -827,9 +832,9 @@
    ========================================================================= */
 const COFRES = [
   /* Administração */
-  {"v":1,"it":310000,"salt":"hivMWcRK8Eyz5bBR5yojlw==","iv":"W+4w0tFxxu5unEeH","ct":"xTh0u2Vl41O8tahjLiId4YqB7FtKtn4kC+k/fFZwOLt1meqdMzjGJs+SDuCyy46+3I0emeoXY6N2Qgp7GNZfLoHdpwfGPm3uicHyV24kTGc35tIUVhvnfBvl0Fpf1oSwUQZKej3qjW2t3tX5D+GFtvHzIp9FUuBBFiHaoxZUgCX0JZHw0oot2mvFqZss8CtK2T2kdGlVUCSr95Qhv47XB/9n/r7licq3MAGYdG0BMIowqz9sxli46OxhS+yPIfk9+Tcm4yTA8XKKci6NbAQsSUYMZC7JxbyvOntp9RnZAckpEQWXVwzAm4brH0q2ciAlZQgJ15SmG+G+1FOBzAd4rPG5yN3Z5FK4rzZyXhVGkB6e8BgagiEa1fgGRA/nbgJBGwOPgR17Kbt7vRfwNaGXyKuV18PGTXTPmYhb8uuxrrwzGfYEBQN2qc7gsrSDNmUh3sZmaVinyz/VGZJam90fot8JkOW0nmIahR/Vk96TmUlqirbQeFhRc0DtggHddujXIYgExOuprYyBfBQPkPx3m/YS7xzK1VzfRqsHQ8UzQihktxIsQJ35pRaL8gyi38CS7ewhW+/Ml88pk8bGSl1ZT0BXTnBbP8cndyJYwxFIs78nTuyrXcYbWXibdef9Z9jLG2C+fTF5MqpfQA5v9BB7FP+HuqiWUfwsS42YtwxZGAxWGTsfvr8r3N9qOvdc8JpIS3KR1H9psnrZY4S2CLcr8CptyW/eytsfYcG892U5yN3WDmUwK1XxMly30atuG2lrJzbxtJiFqx9e6jlGPu3idgwUOkNF4Bxq/eN/I+h5gcXoc9B5YBwDstWytXiR81uWEV/jLTgdka/Nq3/qTxLAgHRx+s2nHuJy5AYBbbM4SXfTrfrM+dOxoE2HaT8KpIT8gfW4/rnIJGYb0T9xdoPBROPntO/HIW47QbX4JYmT5MQNSzBL++8zPN/5MBr9ZABdMEZqtETROwftHWYfgDZKGeFBAGYDFPdIxOuF90jr/8fJHnmLr7PMQYlG0NypUOdbQ/SEdN88birX5TCRKhP1Kr8Iz7x1eXdHaaT9NqlchEMsB6ksKypvH6VKOsEGu1C24Mm8D29WQ/gezAGUCKGBsJQ0yFk+ZBkvzhYHC1RZhmUC2VTwg55u3wgz4bP9k2zXEYV5i4KvJ/ucMc/eAdC1YWoMtAlI+vU6CV2GeXlH/d78OzlIUShDIJ5SNPzNyGByxO3EBM0/dxffLPJ/tmHID4B0"},
+  {"v":1,"it":310000,"salt":"U82elxxuTgzpNmtQlUxwWw==","iv":"Iuc62P48DxHG1eAP","ct":"a0UNck55/vd42f98kNwqjHdYvWKkcsv3yno37u6WyveYz6ewt32tn8R3iQIkTe/MypDJzs/bcMTNj4reh3BA9FBP+C8PXeMypJ9bPdlsGKBAe8LW+kMj1PpCEbJmHRbLGzoL/C9d+M69Nu2UJ7nompElQgCs3IR/mK8X3ZDePYUV/sWjemqi0JIsR/ugdS8hEM2jRgnpCmZOAfiqc9r+JZrAljHVgFDlmGZ/p3ZXB0s4BbEUZ88HXquPrAKDfWXcx4qLq8EfDAxgQo4wbZO1gI025pSej7Za1gF9sb7/j+eVLKXOu+oOK2KkQGPwpoJuKfCUbxC+mewf8KD/ZT5f8MNXUVrsGXw9Um2egE4lVvp60m4d48SFw7OFytE80kTdVW0LHtep7ybgbkl887vTHnoq9DUGwMCNM2gSqWjp4SPOpmvXXzCARvTPFhKQtpfAuDKk5CDOBM6B6ZyYdQ3l44F3KxO7m0zpDQSzgUL6FYtw8W1jDgaXZ57Oiwq3p/iufzVxr/x42OWxYMT5yOoTy7nvUedet66cpjhbEV/mmVs+IFpvKb5+UV+OrsnWOP/TX5COUxdkeOKXYM2oXLDh5JRIdsiRnB6YO4PT51pNgys6KlUDl8rP3iuRT0mPBk1adNvj6XzFtO59kIY/mhc1Ord+W2JhiwsDij+ZPpBzm38a8wdd0dKsKJj0ybPtqeC4MajfSQiu9RHxojRQXb9duu7sRda/R6Que+DEPjI7iO6bjx2DMBiI+BahH6lQanh0WnSpukiq1Gau88/xKqvYoNZ99HJWzcO+KfpcXyFJv3TVvIj4oFvtJ5YRfSQZGzIhl29NhA3eTPTUaY0HHt+tFIMqo0WT+N2aeQrUAHjOsk4QoRQR4OPzA35Vjv81MPC+7n09s+nLhgRv9+a9Q19KQzlQmuyMebUkdzVMTLakdx0QTZQxV91nmg6d8u3F7i235BHj18sYU+Jwv9czmWv8vAosFApb3l3NtxRI+sUGu/96qVriGHzObnbYrb6/IeZPL2e2NDi7Hw+nLvBGGEWSyroZFqXvv/04O0ByqKEa71L73ot+vKYSb41RX683gUmMmxiCKOgcKsiswUmsAI1qNVLwDR3GkoRMK2dmGHDP9Xu6UlY3dsR7b5PdNPj9zfWZNUkJvVyHM/FWcnB/gHZaar6akfgLoZoM6mLVc3xziqkDMkvqld1CyGgYFerh1ndQoGF2qtOEPoG089mZC7Wy7Yv9L8YPBnDwIdYS5+wLY8mxpspZk6otI/NkzyI/KkA43TvAW0q8KqFS5C/jBiYkl5gCHQCgxbQezQICfq4PjH8sfk25ZHnFv3CWSm0XS5HmTc4Lt2DqH8zek4MJ1bsbWGrhZUPLZKOmGQwMfvgFjtauxrFVL8XXvKN9ECkklitywSBTrAo="},
   /* Lideranças */
-  {"v":1,"it":310000,"salt":"vLMqhOQmH4zm2LYLPp5OPw==","iv":"XL2dNnt1r5YMQ8l/","ct":"1sTZCpHCy7XfVCQuQWJmatH99ehbTnotVZDMEQ8tKZWR7L/rPSRUW+vMlbWIUbaji9UOpKhmKkxpVuV7kc4V23qxS9bpOCQzl0vDoIzfJ6LGqmVJ57+ZsAB3a5lPpiMNyAt/dl9zDfJbkEQyy4IVFQ7PB/fiDxmblmMIU55+B/vMtSwReqvsh/oRFahQxU0VuYFfBDFzive2CLELLVu5PGFwl88Nmu9aA9U8vFhdz0Od+Pgdyo1Jr6lI0pIanO0FgtfNjXBoVWHk/GksBrVGVjbVG6BG0bU+zJTLoWIZnVD8NvhyA3rwDykF4J01RYYJnf5khJqs7op7HHYh2hMr2pSje0JMsb339y+UhsdgtuBHa1lHJp0FEXxA0GqdtbBLtYmf/IbiUpAQQ4pWDcutf+0O6XH9LiaInMeygZNXCixhLAGjQekZFsw131pEpqzaXp1Ggo1HyBS7b5aQ0Uf3ZHnmmPShirku6ongNwoItuQDOP/1KmrRF8nQELUFAihw9dz9wsVRdANP3PciNA7PfER5SpdwD6pffAILLnCEFDxdg6T+3cN44KaF4WmSY5chK4dJa4bjRI5/8JJ4+NWxglEDF8G94QzMPiy71TlMSmhtPc6gg32mOMsopvIo+Ujl5RH2coWar/jSFc19J108OQWzswXeNiuwcXEpUiDJmEvJinFaEC5SyO2InKhTbOg/7QybKlntf74VQ6MIjKqbgG4qLB1IqNRAAjLQHZ6zq64F7mHvJLm0DSH/BZfFIdwrob85UoGsLiG7codsS9zoj8vr6ia3bkj/8YVQ5uN3b0Na4mrvbUMl2HbfDHu16mlQb26i0jmUMjPF3w+QnjtZhlsO6/aAC2MB/CTH0ZSt/gf/2+Gio/a36aCClWW8OWRKUXArns1N5dR7p2kSltKrv+YFDj7acEV1jntJuX0O2U3xFQ9fbp+QelURN9DIZcmYv1a+OGqjSC2WpigdS9ohWQt1qzgmU6WwT9NGSOXjpPzXMl0jMq65QodHmlLFvRgSHpL4sHZcDp1bvkEgprxHieHtkiKn+s4/bnc8XRSu1KD6Q8UazQdFZtydkM6NaEPMTe+ytLijlD55bEEDWf9NEIF4qjvLna5pFJn1/CaGPr3qekFtMmNViSeikQr48bfZHPn3dw3Ip0qUlf10hFtY2k2iIm5040nfJbyI8szD4bPJoHr0c73YO4cBcdY2qkFtmksv9enC9Kjw1Kpm6oN16/ls"}
+  {"v":1,"it":310000,"salt":"869fxK7dPSC624Qi/mqB8A==","iv":"WRlDEEZ8WQBY+S4o","ct":"NwkvMv8th4AQBuQCe4ZXcoowRVqgzezQN4AsNh0Xg4uCxUv3MG8uerBzHajzZlwPvu14wo9dyXMbOjkUdKzYN2kcMZO7HMvi/AIFb60+Mvuua/FH0IjVPoXqCXho0D0jOhjLGzJKCWwvAmisiFmtjjePzUGnec0+Y7cY190W6uz+rerSr0q5sdP/at2mjoRlaqttGYej61ydaCVNyebPYUP1qj3NWADwLYEmrbEHbaRWoZJD2obNrDYzAXZdKdI8VguouX8wiiz26yF+qnFqd8Pd21+O1i9Dn7pCetuKJJp+UGB0rDhqcX9dTOXIhOUOVelkjCEPQUuoiGuCbIeadWs/IzE1iy6rctPnxRDqbnrxFxJkk75ZCVIo4ltO0mm5x1GjaynXwJ9OnD+3HlwfmbNvu6lU3Xx7LHMsNwXG1zCRdViXtmuObcDuxw/rM8BOgJKVhMdKw6BigoOawNF2fiLBFWuLJZYwls1d4fe8Yexk9WRyTFAI4WRNrhSQwrzLVcVG16IPR9I/9Xaucw/BpH4g0gWkXV60YuYZwvAUT5a3btGbfw3z4CRCHdrRyAhS1uhXaEiC4xkq4rz0tUGNiWfm+zStP8J/OG2dQ4TUtzyy0+W49mtyCb5NKooynAHy3EQS8O8YwEfpLlSCRIbFHZZx95IVhUn6n2486rd30FTRHN1k9ZJlBNVlLr6mOBSWGk0UabxnJCa9bIxf3bMb5BEJkKv3t6qzwJ1dTdWJxis9BmoTSzTvvQgvme/1804kfmGX5JNR0uhCP8kMG3olBRvnV8eLdX+opYCv0XLa65USAouwrayqT8tHFYJ5rw1bImcARqF6us3ryrili4yRmjF8wb3fNcGhVwWPTLC0YPkx3o5/0pjkhlGHOkdlQpO4inQJLSmsyCt1ZcEdqyBLQOnMFSdtfpJ4JbY7HKja0m+LuHAfbAD3eIttni84s/Y9fCCDQSO+Y9ze0Ts5nvgr8YJmnGe/p8hxzTSeitGiu26k6/U6i9cGPdK1kKNYmjLfPEXk49yj9rGEaaaPUoSwbTPYHbcriKrS/xsOhWR9h8chHGcskOp/CP0f+jvjUpgYdRkFyESR8hUx+A7xQ5FLlzGYtsGlknlbwmbP9CEaKjgutNjf0hs7GyyN3FdLIbbgtVqU1gcbjN2l9W7/bkpFrJvzBaE/EcDJXuRZfIxUJFIOawT+8Xt9cD08++WAZBqi0c97AftRe/MUVqk/00NQuvSZRMe4qaOTKbkRahU6MVej0mD85akrKD3oAoMxD693dYu9pl5kTc0pN9ka5uopEtRL9BCTcgudDR94MhPrreYsEX6rJgpVPssnI3aytP7U3o6wvwR6BsV3qG2cIH9GLHylOxJBvcnQCZxK/UpYNRZ+EqMEKy1n/SPhDCnSub8BJr6FmEM="}
 ];
 
 const b64bytes = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -2644,8 +2649,9 @@ async function ferramentaConsultarPlanilha(e) {
    CONSULTOR IA
    Responde sobre os números do painel. As perguntas quantitativas passam
    obrigatoriamente por ferramentas que leem o snapshot consolidado — o
-   modelo não estima, consulta. A chave da API fica só no navegador do
-   usuário (localStorage), nunca no repositório.
+   modelo não estima, consulta. A chave da API vem cifrada no cofre do painel
+   (liberada pelo login, funciona em qualquer aparelho); nunca está em claro
+   no repositório.
    ========================================================================= */
 const IA_MODELO = 'claude-sonnet-5';
 const LS_CHAVE = 'bm_ceo_api_key';
@@ -2668,8 +2674,29 @@ function snapshot() {
   if (!R) return {};
   const A = R.alvaras, C = R.crm, T = R.controladoria, D = R.diligencias, E = R.execucoes, B = R.clientes;
   const n = v => (v === null || v === undefined || !isFinite(v)) ? null : Math.round(v * 100) / 100;
+  const G = R.gestao || {};
   return {
     posicao: R.hoje.toLocaleDateString('pt-BR'),
+    gestao_executiva: {
+      north_star_pct: n(G.northStar),
+      north_star_definicao: 'percentual das análises tecnicamente viáveis que virou contrato assinado',
+      north_star_contratos: G.northStarNum, north_star_base_viaveis: G.northStarBase,
+      ciclo_de_caixa_lockup_dias: n(G.cicloTotal),
+      lockup_referencia_mercado_dias: BENCH.lockupTotal,
+      lockup_trecho_contrato_ate_protocolo_dias: n(G.cicloProtocolo),
+      lockup_trecho_credito_ate_repasse_ao_escritorio_dias: n(G.lockupCobranca),
+      lockup_trecho_agendamento_ate_atendimento_dias: n(G.cicloComercial),
+      collection_rate_pct: n(G.collectionRate), collection_rate_referencia: BENCH.collection,
+      write_off_pct: n(G.writeOff), write_off_referencia: BENCH.writeOff,
+      take_rate_referencia_realization: BENCH.realization,
+      pipeline_nao_trabalhado_valor: n(G.pipelineValor),
+      pipeline_nao_trabalhado_qtd: G.pipelineViaveis,
+      capital_parado_que_depende_so_do_escritorio: n(G.capitalImediato),
+      capital_parado_que_depende_do_judiciario: n(G.capitalJudicial),
+      nota: 'O ciclo de caixa e o collection rate saem das datas efetivamente ' +
+            'preenchidas nas planilhas; alvarás sem rateio lançado não entram na conta ' +
+            'e por isso o ciclo real tende a ser maior do que o medido.'
+    },
     financeiro: {
       honorarios_ultimos_12_meses: n(A.receita12),
       valor_creditado_historico: n(A.creditado),
@@ -2767,9 +2794,9 @@ function alertasParaIA() {
 
 const IA_TOOLS = [
   { name: 'consultar_metricas',
-    description: 'Devolve o snapshot completo e conferido de todos os números do painel: financeiro, comercial, compromissos com o cliente, operacional, execuções e carteira. Use para QUALQUER pergunta quantitativa.',
+    description: 'Devolve o snapshot completo e conferido de todos os números do painel: gestão executiva (North Star, ciclo de caixa/lockup, collection rate, write-off, pipeline não trabalhado), financeiro, comercial, compromissos com o cliente, operacional, execuções e carteira. Use para QUALQUER pergunta quantitativa.',
     input_schema: { type: 'object', properties: {
-      area: { type: 'string', enum: ['tudo', 'financeiro', 'comercial', 'compromissos_com_cliente', 'operacional', 'execucoes', 'carteira'],
+      area: { type: 'string', enum: ['tudo', 'gestao_executiva', 'financeiro', 'comercial', 'compromissos_com_cliente', 'operacional', 'execucoes', 'carteira'],
         description: 'Recorte desejado. Use "tudo" quando a pergunta for ampla.' } },
       required: ['area'] } },
   { name: 'listar_alertas',
@@ -2845,6 +2872,7 @@ function promptSistema() {
     '',
     'Qual ferramenta usar:',
     '- Números agregados, percentuais, totais → consultar_metricas.',
+    '- Ciclo de caixa, lockup, North Star, collection rate, write-off, realization, indicadores antecedentes → consultar_metricas com area "gestao_executiva". Estes indicadores EXISTEM no painel: nunca diga que não há.',
     '- Problemas, riscos, prioridades, "o que fazer" → listar_alertas.',
     '- "Quais processos", "me dê a lista", "quem são", detalhe caso a caso → listar_registros. NUNCA responda que não tem a lista antes de tentar esta ferramenta.',
     '- Um cliente, processo, réu ou vara específico → buscar.',
@@ -2857,6 +2885,7 @@ function promptSistema() {
     '- Os valores de alertas diferentes NÃO são somáveis: carteiras distintas podem conter o mesmo processo. Nunca apresente um total somando alertas.',
     '- Win rate considera apenas atendimentos com desfecho registrado; há atendimentos sem desfecho que tornam o número real incerto — mencione isso se for relevante.',
     '- "Take rate" é quanto dos valores creditados fica como honorário do escritório.',
+    '- O ciclo de caixa (lockup) é medido só onde as duas datas estão preenchidas. Alvarás sem rateio lançado ficam de fora, então o ciclo real é maior que o medido — diga isso ao comparar com a referência de mercado de 75 dias.',
     '',
     'Estilo: português do Brasil, direto, começando pelo número ou pela conclusão. Depois, no máximo 3 a 5 pontos de leitura gerencial. Quando o usuário perguntar o que fazer, use a proposta de solução do alerta correspondente e priorize por severidade e por dinheiro envolvido. Se a pergunta for ambígua, assuma a leitura mais útil e declare a suposição. Não exponha raciocínio interno.'
   ].join('\n');
@@ -2943,12 +2972,18 @@ async function perguntarIA(texto) {
 }
 
 function montarIA() {
-  if (chaveIA()) document.getElementById('iaChave').classList.add('oculto');
+  const caixa = document.getElementById('iaChave');
   if (chaveVeioDoCofre()) {
-    const av = document.getElementById('avisoChave');
-    if (av) av.innerHTML =
-      '&#128274; Chave liberada pelo seu login — o consultor funciona em qualquer aparelho, ' +
-      'sem precisar colar nada. A chave fica cifrada no cofre deste painel.';
+    /* A chave veio cifrada no cofre: não há nada para colar. Em vez de sumir
+       com a caixa, ela vira uma confirmação de que o consultor está pronto —
+       é o que o CEO precisa saber ao abrir o painel no celular. */
+    caixa.classList.add('pronta');
+    caixa.querySelector('.ia-chave-linha').classList.add('oculto');
+    document.getElementById('avisoChave').innerHTML =
+      '&#10003; <b>Consultor pronto.</b> A chave está cifrada no cofre deste painel e é ' +
+      'liberada pelo seu login — funciona no celular, no iPad e no computador, sem colar nada.';
+  } else if (chaveIA()) {
+    caixa.classList.add('oculto');
   }
 
   document.getElementById('btnSalvarChave').addEventListener('click', () => {

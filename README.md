@@ -73,9 +73,12 @@ Cada alerta responde a cinco perguntas, nesta ordem:
 Campo de pergunta em linguagem natural sobre os números do painel, no topo da página.
 
 - **Modelo**: Claude Sonnet 5.
-- **Chave da API**: colada pelo próprio usuário e guardada **apenas no `localStorage`
-  do navegador**. Nunca vai para o repositório nem para servidor algum — a única
-  saída é a chamada direta à API do Claude.
+- **Chave da API**: cifrada dentro do **cofre do painel** (AES-256-GCM, PBKDF2 com
+  310.000 iterações), junto com os IDs das planilhas. Quem faz login com Administração
+  ou Lideranças libera a chave; o consultor então funciona em **celular, iPad e
+  computador** sem colar nada. Nunca aparece em claro no repositório, e a única saída
+  é a chamada direta à API do Claude. Colar a chave manualmente (guardada no
+  `localStorage` daquele navegador) segue valendo como alternativa.
 - **Não estima**: toda resposta passa por ferramentas que leem os dados. O modelo só
   pode responder com o que a ferramenta devolveu.
 
@@ -83,7 +86,7 @@ Campo de pergunta em linguagem natural sobre os números do painel, no topo da p
 
 | Ferramenta | Para que serve |
 |---|---|
-| `consultar_metricas` | Snapshot conferido de todas as áreas (agregados) |
+| `consultar_metricas` | Snapshot conferido de todas as áreas (agregados), incluindo o recorte `gestao_executiva`: North Star, lockup por trecho, collection rate, write-off e pipeline não trabalhado |
 | `listar_alertas` | Alertas com diagnóstico, causa, solução, responsável e prazo |
 | `listar_registros` | **Registros individuais** — processo a processo, cliente a cliente. Responde "quais", "me dê a lista", "quem são" |
 | `buscar` | Procura um cliente, processo, réu ou vara em todas as fontes de uma vez |
