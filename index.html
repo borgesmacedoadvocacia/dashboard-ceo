@@ -377,6 +377,43 @@
     .modal-campos { grid-template-columns: 1fr; }
   }
 
+  /* ===== CARTÃO KPI CLICÁVEL ===== */
+  .kpi-clicavel { cursor: pointer; transition: background .14s, border-color .14s, transform .14s; }
+  .kpi-clicavel:hover {
+    background: var(--bg3); border-color: rgba(59,130,246,.4); transform: translateY(-2px);
+  }
+  .kpi-clicavel::before {
+    content: '\21F2'; position: absolute; right: .6rem; bottom: .5rem;
+    font-size: .8rem; color: var(--texto-muted); opacity: 0; transition: opacity .14s;
+  }
+  .kpi-clicavel:hover::before { opacity: .85; }
+
+  /* ===== TABELA DENTRO DO MODAL ===== */
+  .modal-tabela-wrap { overflow-x: auto; border: 1px solid var(--borda); border-radius: 10px; }
+  .modal-tabela { width: 100%; border-collapse: collapse; font-size: .81rem; min-width: 420px; }
+  .modal-tabela thead th {
+    position: sticky; top: 0; background: var(--bg3);
+    text-align: left; padding: .55rem .7rem; font-size: .64rem;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--texto-muted);
+    font-weight: 700; white-space: nowrap; border-bottom: 1px solid var(--borda);
+  }
+  .modal-tabela thead th.dir, .modal-tabela td.dir { text-align: right; }
+  .modal-tabela tbody td {
+    padding: .5rem .7rem; border-bottom: 1px solid rgba(30,45,74,.5);
+    vertical-align: top; line-height: 1.45;
+  }
+  .modal-tabela tbody tr:last-child td { border-bottom: none; }
+  .modal-tabela tbody tr:hover { background: rgba(255,255,255,.03); }
+  .modal-lista-nota { font-size: .74rem; color: var(--texto-muted); margin-top: .55rem; }
+  .modal-lista-total {
+    margin-top: .8rem; padding: .7rem .9rem; border-radius: 9px;
+    background: var(--bg3); border: 1px solid var(--borda);
+    font-size: .85rem; font-weight: 600;
+  }
+  .modal-lista-total b { color: var(--azul-claro); }
+  .resumo-item.item-clicavel { cursor: pointer; transition: background .14s, border-color .14s; }
+  .resumo-item.item-clicavel:hover { background: var(--bg4); border-color: rgba(59,130,246,.4); }
+
   .filtros .sep { width: 1px; align-self: stretch; background: var(--borda); margin: 0 .35rem; }
 
   /* Termômetro */
@@ -477,6 +514,46 @@
     padding: .6rem 1.1rem; cursor: pointer; white-space: nowrap; transition: filter .15s;
   }
   .ia-btn-chave:hover { filter: brightness(1.1); }
+
+  /* North Star */
+  .ns-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; }
+  .ns-card {
+    background: linear-gradient(150deg, rgba(37,99,235,.16), var(--bg2) 62%);
+    border: 1px solid rgba(59,130,246,.32); border-radius: var(--radius);
+    padding: 1.4rem 1.5rem; box-shadow: var(--shadow);
+  }
+  .ns-rotulo { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--azul-claro); font-weight: 700; }
+  .ns-valor { font-size: 3rem; font-weight: 800; letter-spacing: -.04em; line-height: 1.05; margin: .35rem 0 .2rem; }
+  .ns-detalhe { font-size: .88rem; color: var(--texto); }
+  .ns-nota { font-size: .8rem; color: var(--texto-muted); line-height: 1.6; margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--borda); }
+  .ns-nota b, .ns-detalhe b { color: #fff; }
+  .ns-lado { display: flex; flex-direction: column; gap: 1rem; }
+  .ns-mini {
+    background: var(--bg2); border: 1px solid var(--borda); border-left: 3px solid var(--texto-muted);
+    border-radius: var(--radius); padding: .95rem 1.1rem; flex: 1;
+  }
+  .ns-mini.alerta { border-left-color: var(--amarelo); }
+  .ns-mini.ok { border-left-color: var(--verde); }
+  .ns-mini-rotulo { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--texto-muted); font-weight: 700; }
+  .ns-mini-valor { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; margin: .25rem 0 .15rem; }
+  .ns-mini-sub { font-size: .78rem; color: var(--texto); }
+  .ns-mini-nota { font-size: .73rem; color: var(--texto-muted); margin-top: .4rem; line-height: 1.5; }
+
+  /* Cadência de gestão */
+  .cad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+  .cad-card {
+    background: var(--bg2); border: 1px solid var(--borda); border-radius: var(--radius);
+    padding: 1.1rem 1.2rem; box-shadow: var(--shadow);
+  }
+  .cad-quando { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--azul-claro); font-weight: 700; }
+  .cad-foco { font-size: 1.15rem; font-weight: 800; letter-spacing: -.02em; margin: .2rem 0 .1rem; }
+  .cad-olhar { font-size: .8rem; color: var(--texto-muted); margin-bottom: .7rem; }
+  .cad-pauta { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .45rem; }
+  .cad-pauta li { font-size: .82rem; line-height: 1.5; padding-left: 1rem; position: relative; color: var(--texto); }
+  .cad-pauta li::before { content: '\2192'; position: absolute; left: 0; color: var(--azul-claro); }
+  .cad-itens { font-size: .74rem; color: var(--texto-muted); margin-top: .8rem; padding-top: .6rem; border-top: 1px solid var(--borda); }
+
+  @media (max-width: 860px) { .ns-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -540,12 +617,66 @@
   </section>
 
   <section class="secao">
+    <div class="secao-titulo">North Star</div>
+    <div class="secao-sub">A métrica que antecede a receita. Ao lado, os dois números que dependem de decisão sua, não do mercado.</div>
+    <div class="ns-grid" id="northStar"></div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Ciclo de Caixa (Lockup)</div>
+    <div class="secao-sub">Quantos dias o dinheiro fica preso entre o trabalho feito e o caixa do escritório. É a métrica que managing partners usam para achar capital de giro sem vender mais — reduzir o ciclo libera dinheiro que já é seu.</div>
+    <div class="resumo-grid" id="resumoLockup"></div>
+    <div class="card">
+      <div class="grafico-box medio"><canvas id="grafLockup"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <div class="tabela-wrap">
+        <table id="tabelaLockup">
+          <thead><tr><th>Trecho do ciclo</th><th>Dias</th><th>Estado</th><th>Dono</th><th>Por que importa</th></tr></thead>
+          <tbody id="corpoLockup"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Indicadores Antecedentes e de Resultado</div>
+    <div class="secao-sub">Os <b>antecedentes</b> você move esta semana e eles mudam o resultado do mês que vem. Os <b>de resultado</b> contam o que já aconteceu — servem para conferir, não para dirigir.</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="secao-sub" style="margin:0 0 .6rem 0">Antecedentes — o que você move agora</div>
+        <div class="tabela-wrap">
+          <table id="tabelaLeading">
+            <thead><tr><th>Indicador</th><th>Hoje</th><th>Alvo</th><th>Estado</th><th>Efeito</th></tr></thead>
+            <tbody id="corpoLeading"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="secao-sub" style="margin:0 0 .6rem 0">De resultado — o que já aconteceu</div>
+        <div class="tabela-wrap">
+          <table id="tabelaLagging">
+            <thead><tr><th>Indicador</th><th>Hoje</th><th>O que representa</th></tr></thead>
+            <tbody id="corpoLagging"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo">Cadência de Gestão</div>
+    <div class="secao-sub">O ritmo que separa quem gerencia de quem apaga incêndio: cada faixa de tempo olha uma camada diferente do negócio.</div>
+    <div class="cad-grid" id="cadencia"></div>
+  </section>
+
+  <section class="secao">
     <div class="secao-titulo">Consultor IA</div>
     <div class="secao-sub">Pergunte em português sobre qualquer número deste painel. O consultor <b>consulta os dados consolidados</b> antes de responder — não estima.</div>
 
     <div class="card">
       <div class="ia-chave" id="iaChave">
-        <span>Cole sua <b>chave da API do Claude</b> para ativar o consultor. Ela fica salva só neste navegador e nunca é enviada para o repositório.</span>
+        <span id="avisoChave">Cole sua <b>chave da API do Claude</b> para ativar o consultor. Ela fica salva só neste navegador e nunca é enviada para o repositório.</span>
         <div class="ia-chave-linha">
           <input type="password" class="campo-texto" id="inputChave" placeholder="sk-ant-..." autocomplete="off" />
           <button type="button" class="ia-btn-chave" id="btnSalvarChave">Salvar chave</button>
@@ -1000,6 +1131,79 @@ function ligarBusca(id, aoDigitar) {
   };
   el.addEventListener('input', disparar);
   limpar.addEventListener('click', () => { el.value = ''; el.focus(); disparar(); });
+}
+
+/* =========================================================================
+   LISTA DENTRO DO MODAL
+   Para quando o clique num cartão precisa mostrar "quais registros estão
+   por trás deste número".
+   ========================================================================= */
+/**
+ * abrirLista({ titulo, sub, colunas:[{r,chave,alinha,formata}], linhas:[obj],
+ *              vazio, rodape, notas:[{tipo,html}], limite })
+ */
+function abrirLista(cfg) {
+  const cols = cfg.colunas || [];
+  const linhas = cfg.linhas || [];
+  const limite = cfg.limite || 300;
+  const vis = linhas.slice(0, limite);
+
+  let html = '';
+  if (cfg.resumo && cfg.resumo.length) {
+    html += '<div class="modal-campos" style="margin-bottom:1rem">' +
+      cfg.resumo.map(c => '<div class="modal-campo">' +
+        '<div class="modal-rotulo">' + c.r + '</div>' +
+        '<div class="modal-valor ' + (c.classe || '') + '">' + c.v + '</div></div>').join('') +
+      '</div>';
+  }
+
+  if (!vis.length) {
+    html += '<div class="obs-vazio">' + (cfg.vazio || 'Nenhum registro para exibir.') + '</div>';
+  } else {
+    html += '<div class="modal-tabela-wrap"><table class="modal-tabela"><thead><tr>' +
+      cols.map(c => '<th' + (c.alinha === 'dir' ? ' class="dir"' : '') + '>' + c.r + '</th>').join('') +
+      '</tr></thead><tbody>' +
+      vis.map(l => '<tr>' + cols.map(c => {
+        const bruto = l[c.chave];
+        const v = c.formata ? c.formata(bruto, l) : (bruto === null || bruto === undefined || bruto === '' ? '—' : esc(bruto));
+        return '<td' + (c.alinha === 'dir' ? ' class="dir"' : '') + '>' + v + '</td>';
+      }).join('') + '</tr>').join('') +
+      '</tbody></table></div>';
+    if (linhas.length > vis.length) {
+      html += '<div class="modal-lista-nota">Exibindo os ' + vis.length + ' primeiros de ' +
+        linhas.length + ' registros.</div>';
+    } else {
+      html += '<div class="modal-lista-nota">' + linhas.length + ' registro' +
+        (linhas.length === 1 ? '' : 's') + '.</div>';
+    }
+  }
+
+  if (cfg.rodape) html += '<div class="modal-lista-total">' + cfg.rodape + '</div>';
+  (cfg.notas || []).forEach(n => {
+    if (n && n.html) html += '<div class="modal-nota ' + (n.tipo || '') + '">' + n.html + '</div>';
+  });
+
+  const f = document.getElementById('modalFundo');
+  document.getElementById('modalTitulo').innerHTML = cfg.titulo || '';
+  document.getElementById('modalSub').innerHTML = cfg.sub || '';
+  document.getElementById('modalCorpo').innerHTML = html;
+  f.classList.remove('oculto');
+  requestAnimationFrame(() => f.classList.add('aberto'));
+}
+
+/** Marca um cartão KPI como clicável e liga ao detalhamento. */
+function kpiClicavel(indice, aoAbrir) {
+  const cartoes = document.querySelectorAll('#kpis .kpi');
+  const el = cartoes[indice];
+  if (!el) return;
+  el.classList.add('kpi-clicavel');
+  el.title = 'Clique para ver os registros';
+  el.addEventListener('click', aoAbrir);
+}
+
+/** Liga vários cartões de uma vez: mapa {indice: função}. */
+function ligarKPIs(mapa) {
+  Object.keys(mapa).forEach(i => kpiClicavel(Number(i), mapa[i]));
 }
 
 
@@ -1886,6 +2090,304 @@ function montarAlertas(R) {
 
 
 /* =========================================================================
+   CAMADA DE GESTÃO EXECUTIVA
+   Conceitos consolidados da prática de managing partners e de general
+   counsel: North Star, leading × lagging, lockup (ciclo de caixa),
+   realization e collection rate, e cadência de operação.
+
+   Referências de mercado usadas como régua:
+   - Clio Legal Trends Report 2025: lockup mediano de 43 dias até faturar
+     + 32 até receber = 75 dias no total.
+   - Realization rate médio de mercado: 88%; collection rate: 93%.
+   - Write-off médio: 14% do trabalho realizado.
+   - Prática de operating cadence (weekly/monthly/quarterly) e a regra de
+     manter 3 a 5 métricas com "forcing function" em vez de um mural de
+     indicadores.
+   ========================================================================= */
+
+const BENCH = {
+  lockupTotal: 75,        // dias, mediana de mercado
+  lockupCobranca: 32,     // dias entre faturar e receber
+  realization: 88,        // %
+  collection: 93,         // %
+  writeOff: 14            // %
+};
+
+function mediaN(v) { return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; }
+function medianaN(v) {
+  if (!v.length) return null;
+  const s = [...v].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+/** Métricas de gestão derivadas do consolidado. */
+function calcularGestao(R) {
+  const A = R.alvaras, C = R.crm, T = R.controladoria, E = R.execucoes, D = R.diligencias;
+  const g = {};
+
+  /* ---------- LOCKUP: quanto tempo o dinheiro fica preso ---------- */
+  // Trecho 1 — do crédito em conta até o repasse ao escritório (cobrança).
+  const lockCobranca = A.linhas
+    .filter(x => x.dataCred && x.dataRepasseBM)
+    .map(x => diasEntre(x.dataCred, x.dataRepasseBM))
+    .filter(d => d >= 0 && d < 400);
+  g.lockupCobranca = mediaN(lockCobranca);
+  g.lockupCobrancaMediana = medianaN(lockCobranca);
+
+  // Trecho 2 — do contrato assinado até a ação protocolada (entrega).
+  const cicloProtocolo = T.iniciais
+    .filter(x => x.fech && x.prot)
+    .map(x => diasEntre(x.fech, x.prot))
+    .filter(d => d >= 0 && d < 400);
+  g.cicloProtocolo = mediaN(cicloProtocolo);
+
+  // Trecho 3 — da análise entregue ao atendimento (ciclo comercial).
+  const cicloComercial = C.atend
+    .filter(x => x.dataAgend && x.dataAt)
+    .map(x => diasEntre(x.dataAgend, x.dataAt))
+    .filter(d => d >= 0 && d < 200);
+  g.cicloComercial = mediaN(cicloComercial);
+
+  // Ciclo visível de ponta a ponta (o que a base permite medir).
+  g.cicloTotal = (g.cicloProtocolo || 0) + (g.lockupCobranca || 0);
+
+  /* ---------- COLLECTION RATE ---------- */
+  const creditadoComHon = A.linhas.filter(x => x.honorarios > 0);
+  const recebido = creditadoComHon.filter(x => quitadoG(x.repasseBM));
+  g.collectionRate = creditadoComHon.length
+    ? recebido.reduce((s, x) => s + x.honorarios, 0) /
+      creditadoComHon.reduce((s, x) => s + x.honorarios, 0) * 100 : null;
+
+  /* ---------- WRITE-OFF (glosa) ---------- */
+  const comAmbos = A.linhas.filter(x => x.solicitado > 0 && x.creditado > 0);
+  const solic = comAmbos.reduce((s, x) => s + x.solicitado, 0);
+  const cred = comAmbos.reduce((s, x) => s + x.creditado, 0);
+  g.writeOff = solic > 0 ? (solic - cred) / solic * 100 : null;
+
+  /* ---------- NORTH STAR ----------
+     A métrica que melhor prevê receita futura neste modelo não é o
+     faturamento (lagging), e sim quanto do trabalho técnico já pago vira
+     contrato. É comportamental, o time influencia semanalmente e antecede
+     a receita em um ciclo inteiro. */
+  g.northStar = C.viaveis ? (C.ganhos / C.viaveis * 100) : null;
+  g.northStarBase = C.viaveis;
+  g.northStarNum = C.ganhos;
+
+  /* ---------- PIPELINE PONDERADO ----------
+     Valor esperado do que está no funil, aplicando a taxa de conversão
+     observada — não o valor bruto, que sempre engana. */
+  g.pipelineViaveis = C.viavelSemAgenda;
+  g.pipelineValor = C.ticket && C.winRate
+    ? C.viavelSemAgenda * C.ticket * (C.winRate / 100) : 0;
+
+  /* ---------- CAPITAL EM RISCO ---------- */
+  g.capitalImediato = A.pendBMValor + A.pendCliValor;         // depende do escritório
+  g.capitalJudicial = E.total;                                 // depende do Judiciário
+  g.capitalTotal = g.capitalImediato + g.capitalJudicial;
+
+  /* ---------- SAÚDE OPERACIONAL ---------- */
+  g.slaAnalise = C.slaMedio;
+  g.taxaEntregaPrazo = T.taxaPrazo;
+  g.backlogAberto = D.abertas + E.vencidos;
+
+  return g;
+}
+
+function quitadoG(v) {
+  const t = String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  return t.startsWith('pago') || t.startsWith('dispensad') || t === 'nao ha';
+}
+
+/* =========================================================================
+   PAINEL DE COMANDO
+   ========================================================================= */
+function renderNorthStar(R, g) {
+  const el = document.getElementById('northStar');
+  const ns = g.northStar;
+  const cor = ns === null ? COR_MUTED : ns >= 15 ? COR_VERDE : ns >= 8 ? COR_AMARELO : COR_VERMELHO;
+
+  el.innerHTML =
+    '<div class="ns-card">' +
+      '<div class="ns-rotulo">North Star · Análise viável que vira contrato</div>' +
+      '<div class="ns-valor" style="color:' + cor + '">' + pct1(ns) + '</div>' +
+      '<div class="ns-detalhe"><b>' + num(g.northStarNum) + '</b> contratos de <b>' +
+        num(g.northStarBase) + '</b> análises aprovadas tecnicamente</div>' +
+      '<div class="ns-nota">É a métrica que melhor antecipa a receita deste modelo: mede o aproveitamento do trabalho que o escritório <b>já pagou para produzir</b>. Sobe antes do faturamento subir.</div>' +
+    '</div>' +
+    '<div class="ns-lado">' +
+      cartaoLeading('Pipeline não trabalhado', moeda(g.pipelineValor),
+        num(g.pipelineViaveis) + ' análises viáveis sem atendimento agendado',
+        'Receita esperada aplicando ticket e conversão atuais', g.pipelineValor > 0 ? 'alerta' : 'ok') +
+      cartaoLeading('Capital que depende só de você', moeda(g.capitalImediato),
+        'repasses reconhecidos e ainda não liquidados',
+        'Não depende do Judiciário — depende de rotina interna', g.capitalImediato > 0 ? 'alerta' : 'ok') +
+    '</div>';
+}
+
+function cartaoLeading(titulo, valor, sub, nota, estado) {
+  return '<div class="ns-mini ' + (estado || '') + '">' +
+    '<div class="ns-mini-rotulo">' + titulo + '</div>' +
+    '<div class="ns-mini-valor">' + valor + '</div>' +
+    '<div class="ns-mini-sub">' + sub + '</div>' +
+    '<div class="ns-mini-nota">' + nota + '</div></div>';
+}
+
+/* ---------- Lockup ---------- */
+function renderLockup(R, g) {
+  const etapas = [
+    { nome: 'Contrato → protocolo', dias: g.cicloProtocolo, dono: 'Processual',
+      nota: 'Tempo até a ação existir. É o prazo que o cliente ouve na assinatura.' },
+    { nome: 'Crédito → repasse ao BM', dias: g.lockupCobranca, dono: 'Financeiro',
+      nota: 'Dinheiro já em conta que ainda não virou caixa do escritório.' },
+    { nome: 'Agendamento → atendimento', dias: g.cicloComercial, dono: 'Comercial',
+      nota: 'Quanto maior, mais o lead esfria antes de sentar com o closer.' }
+  ].filter(e => e.dias !== null);
+
+  const total = g.cicloTotal;
+  const dif = total - BENCH.lockupTotal;
+
+  document.getElementById('resumoLockup').innerHTML = [
+    itemResumo('Ciclo visível ponta a ponta', Math.round(total) + ' dias',
+      'contrato até o dinheiro no caixa do escritório',
+      total <= BENCH.lockupTotal ? COR_VERDE : COR_VERMELHO),
+    itemResumo('Referência de mercado', BENCH.lockupTotal + ' dias',
+      'mediana do setor (Clio Legal Trends 2025)', COR_MUTED),
+    itemResumo(dif <= 0 ? 'Abaixo da referência' : 'Acima da referência',
+      (dif > 0 ? '+' : '') + Math.round(dif) + ' dias',
+      dif > 0 ? 'cada dia a mais é capital de giro parado' : 'ciclo mais rápido que o mercado',
+      dif <= 0 ? COR_VERDE : COR_VERMELHO),
+    itemResumo('Collection rate', pct1(g.collectionRate),
+      'dos honorários reconhecidos já entraram no caixa · mercado: ' + BENCH.collection + '%',
+      g.collectionRate >= BENCH.collection ? COR_VERDE : COR_AMARELO)
+  ].join('');
+
+  destruir('lockup');
+  graficos.lockup = new Chart(document.getElementById('grafLockup'), {
+    type: 'bar',
+    data: {
+      labels: etapas.map(e => e.nome),
+      datasets: [{ label: 'Dias', data: etapas.map(e => e.dias),
+        backgroundColor: etapas.map(e => e.dias > 30 ? COR_VERMELHO : e.dias > 15 ? COR_AMARELO : COR_VERDE),
+        borderRadius: 4, maxBarThickness: 38 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      scales: { x: { grid: { color: COR_BORDA }, title: { display: true, text: 'dias' } },
+                y: { grid: { display: false } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: ctx => ctx.parsed.x.toFixed(1).replace('.', ',') + ' dias',
+          afterLabel: ctx => 'Dono: ' + etapas[ctx.dataIndex].dono + '\n' + etapas[ctx.dataIndex].nota
+        } }
+      }
+    }
+  });
+
+  document.getElementById('corpoLockup').innerHTML = etapas.map(e =>
+    '<tr><td><b>' + e.nome + '</b></td>' +
+    '<td>' + e.dias.toFixed(1).replace('.', ',') + ' d</td>' +
+    '<td><span class="tag-pct ' + (e.dias > 30 ? 'vermelho' : e.dias > 15 ? 'amarelo' : 'verde') + '">' +
+      (e.dias > 30 ? 'lento' : e.dias > 15 ? 'atenção' : 'saudável') + '</span></td>' +
+    '<td>' + e.dono + '</td>' +
+    '<td style="white-space:normal;color:var(--texto-muted)">' + e.nota + '</td></tr>').join('');
+}
+
+/* ---------- Leading × Lagging ---------- */
+function renderIndicadores(R, g) {
+  const C = R.crm, A = R.alvaras, T = R.controladoria, D = R.diligencias, E = R.execucoes;
+
+  const LEADING = [
+    { nome: 'Análises viáveis sem agendamento', v: num(C.viavelSemAgenda),
+      alvo: 'zero', ruim: C.viavelSemAgenda > 0,
+      efeito: 'Define a receita do próximo ciclo — hoje é o maior vazamento.' },
+    { nome: 'Atendimentos sem desfecho', v: num(C.semDesfecho),
+      alvo: 'abaixo de 5%', ruim: C.semDesfecho > C.realizados * 0.05,
+      efeito: 'Enquanto não fecha, o win rate real é desconhecido.' },
+    { nome: 'SLA de entrega da análise', v: g.slaAnalise === null ? '—' : g.slaAnalise.toFixed(1).replace('.', ',') + ' d',
+      alvo: 'até 2 dias', ruim: g.slaAnalise > 2,
+      efeito: 'Resposta rápida aumenta a chance de agendamento.' },
+    { nome: 'Diligências sem contato registrado', v: num(D.semContato),
+      alvo: 'abaixo de 10%', ruim: D.total && D.semContato / D.total > 0.1,
+      efeito: 'Sem tentativa, o processo não anda sozinho.' },
+    { nome: 'Prazos de execução vencendo em 7 dias', v: num(E.aVencer7),
+      alvo: 'tratados na semana', ruim: E.aVencer7 > 0,
+      efeito: 'Antecipa perda de prazo e capital travado.' }
+  ];
+
+  const LAGGING = [
+    { nome: 'Honorários dos últimos 12 meses', v: moeda(A.receita12),
+      efeito: 'Resultado do que foi feito nos ciclos anteriores.' },
+    { nome: 'Take rate (realization)', v: pct1(A.takeRate),
+      efeito: 'Quanto de cada real creditado fica no escritório.' },
+    { nome: 'Win rate', v: pct1(C.winRate),
+      efeito: 'Eficácia da negociação nos casos já decididos.' },
+    { nome: 'Protocolo no prazo', v: pct1(T.taxaPrazo),
+      efeito: 'Cumprimento do compromisso assumido na venda.' },
+    { nome: 'Valor em execução', v: moeda(E.total),
+      efeito: 'Estoque de direito reconhecido, ainda não convertido.' }
+  ];
+
+  document.getElementById('corpoLeading').innerHTML = LEADING.map(x =>
+    '<tr><td><b>' + x.nome + '</b></td>' +
+    '<td>' + x.v + '</td>' +
+    '<td>' + x.alvo + '</td>' +
+    '<td><span class="tag-pct ' + (x.ruim ? 'vermelho' : 'verde') + '">' +
+      (x.ruim ? 'fora do alvo' : 'no alvo') + '</span></td>' +
+    '<td style="white-space:normal;color:var(--texto-muted)">' + x.efeito + '</td></tr>').join('');
+
+  document.getElementById('corpoLagging').innerHTML = LAGGING.map(x =>
+    '<tr><td><b>' + x.nome + '</b></td><td>' + x.v + '</td>' +
+    '<td style="white-space:normal;color:var(--texto-muted)">' + x.efeito + '</td></tr>').join('');
+}
+
+/* ---------- Cadência ---------- */
+function renderCadencia(R, g) {
+  const alertas = R.alertas || [];
+  const criticos = alertas.filter(a => a.sev === 'critico');
+  const altos = alertas.filter(a => a.sev === 'alto');
+  const medios = alertas.filter(a => a.sev === 'medio');
+
+  const RITMOS = [
+    { quando: 'Toda semana', foco: 'Operação',
+      olhar: 'Leading indicators e a Agenda do CEO',
+      itens: criticos.length + altos.length,
+      pauta: [
+        'Viáveis sem agendamento: distribuir e cobrar agendamento em 48h',
+        'Prazos vencendo em 7 dias nas execuções e audiências',
+        'Fila de valores a receber junto ao cartório'
+      ] },
+    { quando: 'Todo mês', foco: 'Resultado',
+      olhar: 'Lagging indicators e o ciclo de caixa',
+      itens: altos.length,
+      pauta: [
+        'Take rate e collection rate contra a referência de mercado',
+        'Lockup por trecho: onde o dinheiro ficou preso',
+        'Conciliação de alvarás sem rateio e receita fora do fluxo'
+      ] },
+    { quando: 'Todo trimestre', foco: 'Estrutura',
+      olhar: 'Concentração, dependências e capacidade',
+      itens: medios.length,
+      pauta: [
+        'Concentração por contraparte e por pessoa',
+        'Capacidade real de produção contra o prazo prometido na venda',
+        'Qualidade da base cadastral e do preenchimento das planilhas'
+      ] }
+  ];
+
+  document.getElementById('cadencia').innerHTML = RITMOS.map(r =>
+    '<div class="cad-card">' +
+      '<div class="cad-quando">' + r.quando + '</div>' +
+      '<div class="cad-foco">' + r.foco + '</div>' +
+      '<div class="cad-olhar">' + r.olhar + '</div>' +
+      '<ul class="cad-pauta">' + r.pauta.map(p => '<li>' + p + '</li>').join('') + '</ul>' +
+      '<div class="cad-itens">' + r.itens + ' alerta(s) desta faixa hoje</div>' +
+    '</div>').join('');
+}
+
+
+/* =========================================================================
    FERRAMENTAS DE DETALHE
    O consultor precisa responder "quais processos?", não só "quantos". Estas
    ferramentas devolvem linha a linha, e dão acesso sob demanda a qualquer
@@ -2149,7 +2651,16 @@ const IA_MODELO = 'claude-sonnet-5';
 const LS_CHAVE = 'bm_ceo_api_key';
 let HIST = [];
 
-const chaveIA = () => { try { return (localStorage.getItem(LS_CHAVE) || '').trim(); } catch (e) { return ''; } };
+/* A chave pode vir de dois lugares, nesta ordem:
+   1. do COFRE (cifrada junto com os IDs das planilhas) — assim o consultor
+      funciona em qualquer aparelho, bastando o login da central;
+   2. do localStorage, quando o usuário cola a chave manualmente naquele
+      navegador — continua valendo como alternativa. */
+const chaveIA = () => {
+  if (CONFIG.ANTHROPIC_API_KEY) return String(CONFIG.ANTHROPIC_API_KEY).trim();
+  try { return (localStorage.getItem(LS_CHAVE) || '').trim(); } catch (e) { return ''; }
+};
+const chaveVeioDoCofre = () => !!CONFIG.ANTHROPIC_API_KEY;
 
 /** Snapshot enxuto e serializável do painel — é o que a IA enxerga. */
 function snapshot() {
@@ -2433,6 +2944,12 @@ async function perguntarIA(texto) {
 
 function montarIA() {
   if (chaveIA()) document.getElementById('iaChave').classList.add('oculto');
+  if (chaveVeioDoCofre()) {
+    const av = document.getElementById('avisoChave');
+    if (av) av.innerHTML =
+      '&#128274; Chave liberada pelo seu login — o consultor funciona em qualquer aparelho, ' +
+      'sem precisar colar nada. A chave fica cifrada no cofre deste painel.';
+  }
 
   document.getElementById('btnSalvarChave').addEventListener('click', () => {
     const k = document.getElementById('inputChave').value.trim();
@@ -2880,8 +3397,14 @@ function render(dados) {
   const R = consolidar(dados, hojeZerado());
   R.alertas = montarAlertas(R);
   BASE = R;
+  const g = calcularGestao(R);
+  R.gestao = g;
   montarControles();
   renderTermometro(R, R.alertas);
+  renderNorthStar(R, g);
+  renderLockup(R, g);
+  renderIndicadores(R, g);
+  renderCadencia(R, g);
   renderKPIs(R);
   renderCapital(R);
   renderAlertas();

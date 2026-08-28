@@ -120,3 +120,36 @@ em formato adequado, com aviso — a leitura não quebra nem inventa colunas.
 Cinco perguntas sugeridas ficam disponíveis em um clique, entre elas *"Quais são minhas
 3 prioridades desta semana?"* e *"Se eu só puder resolver um problema este mês, qual
 deve ser?"*.
+
+## Camada de gestão executiva
+
+Incorporada a partir da prática corrente de managing partners e de general counsel:
+
+### North Star
+Uma única métrica em destaque: **quanto das análises viáveis vira contrato**. É
+*behavioral* (mede comportamento, não resultado), *controlável* (o time move na semana)
+e *preditiva* (antecede a receita em um ciclo). Faturamento é resultado — se virasse
+North Star, o painel só olharia para trás.
+
+### Ciclo de Caixa (Lockup)
+Dias entre o trabalho feito e o dinheiro no caixa, quebrado por trecho e com dono
+nomeado. A referência é a mediana de mercado do **Clio Legal Trends Report 2025**:
+43 dias até faturar + 32 até receber = **75 dias**. Reduzir o ciclo libera capital de
+giro que já é do escritório — sem vender mais nada.
+
+Também mede **collection rate** (referência de mercado: 93%) e **write-off** (média de
+14% do trabalho realizado).
+
+### Indicadores antecedentes × de resultado
+Separação explícita entre o que se move agora (leading) e o que apenas se confere
+(lagging). Cada antecedente traz alvo, estado e o efeito que produz. Escolher um
+indicador de resultado como bússola "starva o presente de feedback".
+
+### Cadência de gestão
+Semanal (operação), mensal (resultado) e trimestral (estrutura), cada faixa com pauta
+própria e a contagem de alertas que lhe pertence. É o ritmo que separa gerenciar de
+apagar incêndio.
+
+> A prática de mercado recomenda manter **3 a 5 métricas com forcing function** em vez
+> de um mural de indicadores. Por isso o painel destaca uma North Star e dois números
+> de decisão, deixando o resto como consulta.
